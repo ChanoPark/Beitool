@@ -29,7 +29,10 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'mysql:mysql-connector-java'
 
-	implementation 'com.google.code.gson:gson:2.8.6'
+	implementation 'com.google.code.gson:gson:2.8.6' //Gson
+	//LocalDateTime 직렬화를 위한 jsr310
+//	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+//	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0'
 
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
