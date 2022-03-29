@@ -14,19 +14,23 @@ public class Member {
 
     }
 
-    public Member(Long id) {
+    public Member(Long id, String refreshToken) {
         this.id=id;
+        this.refreshToken = refreshToken;
     }
 
     @Id
     @Column(name="member_id")
     private Long id;
 
-    @Column(name="name")
     private String name;
+    private String refreshToken;
+
 
     @Enumerated(EnumType.STRING)
-    @Column(name="position")
     private MemberPosition position;
 
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 }

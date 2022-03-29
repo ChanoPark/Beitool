@@ -14,6 +14,6 @@ public class TokenInfoFromKakaoDto {
     private Integer expires_in; //엑세스 토큰 만료 시간(초)
     private Integer expiresInMillis; //엑세스 토큰 만료 밀리초
 
-    private Integer app_id; //우리 앱 ID
-    private Integer appId; //우리 앱 ID
+    private String app_id; //우리 앱 ID
+    private String appId; //우리 앱 ID
 }
