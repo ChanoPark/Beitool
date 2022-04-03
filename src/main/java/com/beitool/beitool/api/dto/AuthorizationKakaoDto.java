@@ -13,6 +13,7 @@ public class AuthorizationKakaoDto {
     private String refreshToken; //리프레시 토큰 값
     private String idToken; //ID토큰 값
     private String[] scopes; //사용자의 정보 조회 권한 범위 ->> 안쓰는중
+    private String app_id; //우리 앱ID(카카오)
 
     private String accessTokenExpiresAt; //엑세스 토큰 만료 시간 (ID토큰 만료 시간과 동일)
     private String refreshTokenExpiresAt; //리프레시 토큰 만료 날짜 (포맷: 2022-05-26 00:48:48)
@@ -22,6 +23,10 @@ public class AuthorizationKakaoDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setAppId(String id) {
+        this.app_id = id;
     }
 
     public void setScreen(String screen) {

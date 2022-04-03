@@ -12,6 +12,7 @@ import lombok.Getter;
 public class UpdateTokenFromKakaoDto {
     String access_token;
     String refresh_token;
+    String id_token;
     String token_type;
     Integer refresh_token_expires_in;
     Integer expires_in;

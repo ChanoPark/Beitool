@@ -7,6 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 2022-04-02 회원과 관련된 서비스를 제공하는 클래스
+ *
+ * Implemented by Chanos
+ */
 @Service
 @Transactional
 @RequiredArgsConstructor

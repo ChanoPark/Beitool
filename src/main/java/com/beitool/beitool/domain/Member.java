@@ -24,6 +24,7 @@ public class Member {
     private Long id;
 
     private String name;
+    @Column(name="refresh_token")
     private String refreshToken;
 
 
