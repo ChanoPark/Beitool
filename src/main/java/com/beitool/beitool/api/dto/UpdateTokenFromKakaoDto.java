@@ -6,7 +6,7 @@ import lombok.Getter;
 /** 2022-03-29
  * 리프레시 토큰을 사용해 엑세스 토큰을 갱신할 때 사용하는 DTO
  *
- * Implemented by chanos
+ * Implemented by Chanos
  */
 @Getter @Data
 public class UpdateTokenFromKakaoDto {

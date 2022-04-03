@@ -39,10 +39,8 @@ public class MemberKakaoApiService {
         //헤더
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
-
         //Http 엔티티로 조합
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
-
         //카카오에게 GET 요청
         ResponseEntity<String> response = restTemplate.exchange(
                 "https://kapi.kakao.com/v1/user/access_token_info",
@@ -62,7 +60,9 @@ public class MemberKakaoApiService {
             if (tokenInfo.getExpires_in() <= 6000) { //토큰만료가 100분 이하일경우
                 System.out.println("***토큰 만료 시간이 100분 이하입니다.");
                 // 리프레시 토큰을 활용해 토큰 갱신
-                updateAccessToken(tokenInfo.getId(), tokenInfo.getAppId(), authorizationKakaoDto.getRefreshToken());
+                String newToken = updateAccessToken(tokenInfo.getId(), tokenInfo.getAppId(), authorizationKakaoDto.getRefreshToken());
+                authorizationKakaoDto.setAccessToken(newToken);
+                getMemberInfo(authorizationKakaoDto);
             } else {
                 //기존 유저인지 확인부터 해야지
                 getMemberInfo(authorizationKakaoDto);
@@ -102,22 +102,35 @@ public class MemberKakaoApiService {
 
             Long kakaoUserId = (Long) memberInfo.get("id");
 
+            //프론트에게 전해줄 회원ID
+            authorizationKakaoDto.setId(kakaoUserId);
+
             System.out.println("***멤버 조회::" + memberRepository.findOne(kakaoUserId));
 
             if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
                 Member member = new Member(kakaoUserId, authorizationKakaoDto.getRefreshToken());
-                //리프레시 토큰도 넣어야 함.
                 memberRepository.save(member);
+                authorizationKakaoDto.setScreen("UserSelect");
+
             } else { //기존 유저
                 //직급 분간해서 페이지 요청
+                Member findMember = memberRepository.findOne(kakaoUserId);
+                //직급이 있음
+                if (findMember.getPosition() != null) {
+                    System.out.println("***직급있음");
+                    authorizationKakaoDto.setScreen("MainScreen");
+                } else {
+                    System.out.println("***직급없음");
+                    authorizationKakaoDto.setScreen("UserSelect");
+                }
             }
-
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    public UpdateTokenFromKakaoDto updateAccessToken(Long id, String appId, String refreshToken) throws JsonProcessingException{
+    /*리프레시 토큰을 사용해서 엑세스토큰 최신화*/
+    public String updateAccessToken(Long id, String appId, String refreshToken) throws JsonProcessingException{
         //헤더
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -140,19 +153,13 @@ public class MemberKakaoApiService {
         );
 
         String responseBody = response.getBody();
+        UpdateTokenFromKakaoDto newTokenInfo = objectMapper.readValue(responseBody, UpdateTokenFromKakaoDto.class);
 
-        try {
-            UpdateTokenFromKakaoDto newTokenInfo = objectMapper.readValue(responseBody, UpdateTokenFromKakaoDto.class);
+        Member findMember = memberRepository.findOne(id);
 
-            Member findMember = memberRepository.findOne(id);
+        //리프레시 토큰 업데이트
+        memberRepository.updateRefreshToken(findMember, newTokenInfo.getRefresh_token());
 
-            //리프레시 토큰 업데이트
-            memberRepository.updateRefreshToken(findMember, newTokenInfo.getRefresh_token());
-
-            return newTokenInfo;
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        return newTokenInfo.getAccess_token();
     }
 }

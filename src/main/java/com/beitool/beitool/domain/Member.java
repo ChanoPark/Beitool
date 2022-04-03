@@ -33,4 +33,8 @@ public class Member {
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
+
+    public void setPosition(MemberPosition position) {
+        this.position = position;
+    }
 }

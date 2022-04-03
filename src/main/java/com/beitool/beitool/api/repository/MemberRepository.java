@@ -36,4 +36,5 @@ public class MemberRepository {
         member.setRefreshToken(newRefreshToken);
     }
 
+//    public void setPosition()
 }
