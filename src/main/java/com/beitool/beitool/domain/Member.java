@@ -1,8 +1,6 @@
 package com.beitool.beitool.domain;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
 
@@ -10,9 +8,7 @@ import javax.persistence.*;
 @Getter @Table(name="member")
 public class Member {
 
-    public Member() {
-
-    }
+    public Member() { }
 
     public Member(Long id, String refreshToken) {
         this.id=id;
@@ -23,10 +19,11 @@ public class Member {
     @Column(name="member_id")
     private Long id;
 
+    @Column(name="member_name")
     private String name;
+
     @Column(name="refresh_token")
     private String refreshToken;
-
 
     @Enumerated(EnumType.STRING)
     private MemberPosition position;

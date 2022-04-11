@@ -5,7 +5,6 @@ import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.MemberService;
 import com.beitool.beitool.domain.Member;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,8 @@ import org.springframework.web.client.HttpClientErrorException;
 /*
 * 2022-03-26
 * 회원과 관련된 요청을 처리하는 컨트롤러 (로그인/회원가입)
+* 1.엑세스 토큰을 받아 회원 정보 확인(신규/기존)
+* 2.직급을 받아 직급 선택(deprecated)
 * Implemented By Chanos
 * */
 @RestController
@@ -34,6 +35,10 @@ public class MemberSocialApiController {
         } catch (HttpClientErrorException e) { //토큰이 만료된 경우
             Member findMember = memberRepository.findByRefreshToken(token.getRefreshToken());
 
+            if (findMember.getRefreshToken() == "InvalidUser") { //리프레시 토큰이 잘못된 회원이라면 다시 로그인
+                token.setScreen("LoginScreen");
+                return token;
+            }
             kakaoApiService.updateAccessToken(token, findMember, token.getRefreshToken()); //리프레시토큰으로 갱신
             kakaoApiService.getTokenInfo(token); //토큰 업데이트 후, 회원 정보 확인
         }
@@ -41,13 +46,16 @@ public class MemberSocialApiController {
     }
 
     /*직급 선택*/
-    @PostMapping("/register/position/{id}")
-    public PositionResponse setPosition(@PathVariable Long id, @RequestBody PositionRequest position) {
-        System.out.println("**넘어온거: " + position.getPosition());
-        String screen = memberService.setPosition(id, position.getPosition());
+    /*직급 선택할 때, 가게 등록이면 사장이고, 가입이면 직원이기 때문에 한 번에 처리하는 것으로 함.*/
+    @PostMapping("/register/position/")
+    public PositionResponse setPosition(@RequestBody PositionRequest position) {
+        System.out.println("**넘어온거: " + position);
+        String screen = memberService.setPosition(position.getId(), position.getPosition());
 
-        return new PositionResponse(id, position.getPosition(), screen);
+        return new PositionResponse(position.getId(), position.getPosition(), screen);
     }
+
+    /*-----DTO-----*/
 
     /*직급 등록을 위한 이너 클래스 DTO*/
     @Data

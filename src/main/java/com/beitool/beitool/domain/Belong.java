@@ -1,8 +1,14 @@
 package com.beitool.beitool.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -13,7 +19,15 @@ import java.time.LocalDateTime;
 @Entity
 @IdClass(BelongPK.class)
 @Getter @Table(name="belong")
+@NoArgsConstructor
 public class Belong {
+    
+    /*사업장 생성 후 사장의 가입을 위한 생성자*/
+    public Belong(Member member, Store store, LocalDate currentTime) {
+        this.member = member;
+        this.store = store;
+        this.belongDate = currentTime;
+    }
 
     @Id @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="member_id")
@@ -23,8 +37,10 @@ public class Belong {
     @JoinColumn(name="store_id")
     private Store store; //가게와 소속은 다대일관계(가게는 여러 회원을 가질 수 있음)
 
+    @JsonDeserialize(using=LocalDateDeserializer.class)
+    @JsonSerialize(using= LocalDateSerializer.class)
     @Column(name="belong_date")
-    private LocalDateTime belongDate; //가입 날짜
+    private LocalDate belongDate; //가입 날짜
 
     @Column(name="salary_hour")
     private int salaryHour; //시급

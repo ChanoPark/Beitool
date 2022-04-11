@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 2022-04-02 회원과 관련된 서비스를 제공하는 클래스
+ * 1. 직급 갱신
  *
  * Implemented by Chanos
  */
@@ -19,13 +20,11 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
 
-    /*직급 결정*/
+    /*직급 결정*/ //->지금은 직급 선택 방법이 바뀌었지만, 추후 직급 수정 기능을 감안해서 id와 position을 같이 받는 것으로 유지.
     public String setPosition(Long id, String position) {
         Member member = memberRepository.findOne(id);
         String screen = "redirect:/";
-        System.out.println("***??" + position);
-        System.out.println("**?" + id);
-        if (position =="President") {
+        if (position.equals("President")) {
             member.setPosition(MemberPosition.President);
             screen = "PlaceRegister";
             System.out.println("**직급적용");
@@ -33,7 +32,7 @@ public class MemberService {
             member.setPosition(MemberPosition.Employee);
             screen = "PlaceJoin";
         }
-        System.out.println("***직급" + member.getPosition());
+        System.out.println("***직급" + member.getPosition() + "***화면:" + screen);
         return screen;
     }
 }

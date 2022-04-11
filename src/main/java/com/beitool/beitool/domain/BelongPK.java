@@ -13,6 +13,6 @@ import java.io.Serializable;
  */
 @Data
 public class BelongPK implements Serializable {
-    private Member member;
+    private Member member; //member와 store의 기본키로 바꿔야 하나 ?? 서버에 빌드하면 DDL생성이 제대로 안됌
     private Store store;
 }

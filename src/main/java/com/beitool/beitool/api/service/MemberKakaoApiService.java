@@ -24,6 +24,10 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 /**
  * 2022-03-21 카카오 소셜 로그인
+ * 1.카카오API에게 엑세스 토큰을 주고, 토큰 정보를 획득(만료 기간 등)
+ * 2.DB정보를 통해 신규/기존 유저 구분
+ * 3.리프레시 토큰을 사용해 엑세스 토큰 갱신(+리프레시 토큰이 얼마 남지 않을 경우 같이 갱신)
+ * 4.엑세스 토큰을 통해 회원 정보 획득(회원 번호 등)
  *
  * Implemented by Chanos
  */
@@ -37,6 +41,7 @@ public class MemberKakaoApiService {
     private final MemberRepository memberRepository;
 
     /*컨트롤러에서 엑세스토큰을 받으면(프론트에서 로그인하면) 사용자 확인 & 토큰 만료 확인*/
+    /*토큰 정보 확인*/
     public void getTokenInfo(AuthorizationKakaoDto authorizationKakaoDto) throws HttpClientErrorException {
         String token = authorizationKakaoDto.getAccessToken();
 
@@ -47,13 +52,14 @@ public class MemberKakaoApiService {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
 
         //카카오에게 GET 요청
+        try {
         ResponseEntity<String> response = restTemplate.exchange(
                 "https://kapi.kakao.com/v1/user/access_token_info",
                 HttpMethod.GET,
                 entity,
                 String.class
         );
-        try {
+
             //결과
             System.out.println("***토큰정보의 response: " + response.getBody());
 
@@ -64,16 +70,14 @@ public class MemberKakaoApiService {
             authorizationKakaoDto.setAppId(tokenInfo.getAppId());
             authorizationKakaoDto.setId(tokenInfo.getId());
 
+            //엑세스 토큰 만료 시간이 얼마 남지 않은 경우
             if (tokenInfo.getExpires_in() <= 6000) { //토큰만료가 100분 이하일경우
                 System.out.println("***토큰 만료 시간이 100분 이하입니다.");
                 // 리프레시 토큰을 활용해 토큰 갱신
                 throw new HttpClientErrorException(UNAUTHORIZED);
-//                String newToken = updateAccessToken(authorizationKakaoDto, tokenInfo.getId(), tokenInfo.getAppId(), authorizationKakaoDto.getRefreshToken());
-//                authorizationKakaoDto.setAccessToken(newToken); //프론트한테 전달
-//                getMemberInfo(authorizationKakaoDto);
             } else {
                 //기존 유저인지 확인부터 해야지
-                getMemberInfo(authorizationKakaoDto);
+                checkNewMember(authorizationKakaoDto);
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -81,31 +85,36 @@ public class MemberKakaoApiService {
     }
 
     /*컨트롤러에서 카카오 엑세스 토큰을 받아 회원정보 불러오는 API 호출*/
-    public void getMemberInfo(AuthorizationKakaoDto authorizationKakaoDto) {
-        String token = authorizationKakaoDto.getAccessToken();
-        System.out.println("***token = " + token);
+    /*신규 유저와 기존 유저 구분(직급 유/무까지)*/
+    public void checkNewMember(AuthorizationKakaoDto authorizationKakaoDto) {
+//        String token = authorizationKakaoDto.getAccessToken();
+//        System.out.println("***token = " + token);
+//
+//        //헤더
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + token); //데이터를 두 번 저장할 경우 set은 덮어쓰고, add는 추가되어 두개가 조회됌.
+//        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+//
+//        //Http 엔티티로 조합
+//        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
+//
+//        //카카오에게 POST 요청
+//        ResponseEntity<String> response = restTemplate.exchange(
+//                "https://kapi.kakao.com/v2/user/me",
+//                HttpMethod.POST,
+//                entity,
+//                String.class
+//        );
 
-        //헤더
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token); //데이터를 두 번 저장할 경우 set은 덮어쓰고, add는 추가되어 두개가 조회됌.
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+//        System.out.println("***Response: " + response.getBody());
+//        String responseBody = response.getBody();
 
-        //Http 엔티티로 조합
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
 
-        //카카오에게 POST 요청
-        ResponseEntity<String> response = restTemplate.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                entity,
-                String.class
-        );
-
-        System.out.println("***Response: " + response.getBody());
-        String responseBody = response.getBody();
 
         try {
-            Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String,Object>>() {});
+            Map<String, Object> memberInfo = getMemberInfoFromAccessToken(authorizationKakaoDto.getAccessToken());
+
+//            Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String,Object>>() {});
             System.out.println("***id: " + memberInfo.get("id"));
 
             Long kakaoUserId = (Long) memberInfo.get("id");
@@ -121,24 +130,26 @@ public class MemberKakaoApiService {
                 memberRepository.save(member);
                 authorizationKakaoDto.setScreen("UserSelect");
 
-            } else { //기존 유저
-                //직급 분간해서 페이지 요청
-                Member findMember = memberRepository.findOne(kakaoUserId);
-                //직급이 있음
-                if (findMember.getPosition() == MemberPosition.NoPosition) {
-                    System.out.println("***직급없음");
-                    authorizationKakaoDto.setScreen("UserSelect");
-                } else {
-                    System.out.println("***직급있음");
-                    authorizationKakaoDto.setScreen("MainScreen");
-                }
             }
+            /*사업장 생성,등록과 직급을 동시에 하기 때문에, 직급은 무조건 없다.*/
+//            else { //기존 유저
+//                //직급 분간해서 페이지 요청
+//                Member findMember = memberRepository.findOne(kakaoUserId);
+//                //직급이 있음
+//                if (findMember.getPosition() == MemberPosition.NoPosition) {
+//                    System.out.println("***직급없음");
+//                    authorizationKakaoDto.setScreen("UserSelect");
+//                } else {
+//                    System.out.println("***직급있음");
+//                    authorizationKakaoDto.setScreen("MainScreen");
+//                }
+//            }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    /*리프레시 토큰을 사용해서 엑세스토큰 최신화*/
+    /*리프레시 토큰을 사용해서 엑세스토큰 갱신*/
     public AuthorizationKakaoDto updateAccessToken(AuthorizationKakaoDto token, Member member, String refreshToken) {
         String appKey = "64ebcc55e9ce025378904a725743ba67"; // 카카오 REST API Key 값
 
@@ -166,12 +177,38 @@ public class MemberKakaoApiService {
             String responseBody = response.getBody();
             UpdateTokenFromKakaoDto newTokenInfo = objectMapper.readValue(responseBody, UpdateTokenFromKakaoDto.class);
             //리프레시 토큰 업데이트
-            System.out.println("***New RefreshToken" + newTokenInfo.getRefresh_token());
+            System.out.println("***New RefreshToken:" + newTokenInfo.getRefresh_token());
+            System.out.println("***New AccessToken:" +newTokenInfo.getAccess_token());
             memberRepository.updateRefreshToken(member, newTokenInfo.getRefresh_token());
             token.setAccessToken(newTokenInfo.getAccess_token());
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
         return token;
+    }
+
+    /*엑세스토큰을 통해 회원찾기*/
+    public Map<String, Object> getMemberInfoFromAccessToken(String accessToken) throws JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken); //데이터를 두 번 저장할 경우 set은 덮어쓰고, add는 추가되어 두개가 조회됌.
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        //Http 엔티티로 조합
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
+
+        //카카오에게 POST 요청
+        ResponseEntity<String> response = restTemplate.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        System.out.println("***Response: " + response.getBody());
+        String responseBody = response.getBody();
+        Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+        System.out.println("***id: " + memberInfo.get("id"));
+
+        return memberInfo;
     }
 }
