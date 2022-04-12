@@ -40,6 +40,8 @@ public class StoreApiController {
         System.out.println("***사업장 생성 createStoreRequest : " + createStoreRequest);
 
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
+        createStoreResponse.setMessage("Join failed");
+        createStoreResponse.setScreen("PlaceRegister");
 
         //회원 직급 등록(사장)
         try {
@@ -56,7 +58,7 @@ public class StoreApiController {
             LocalDate joinDate = storeService.joinStore(findMember, store);
 
             //ResponseDTO에 정보 삽입(try-catch문으로 인해 생성자에서 바로 삽입을 못함->설계를 잘하면 한번에 할 수 있지 않을까?)
-            createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Successful join");
+            createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Successful join", "MainScreen");
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -80,12 +82,13 @@ public class StoreApiController {
             //사업장 가입
             LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
             Long storeId = storeService.joinStore(findMember,joinStoreRequest.getInviteCode(), currentTime);
-            createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Successful join");
+            createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Successful join", "MainScreen");
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         } catch (NoResultException e) { //올바르지 않은 사업장 코드
             createStoreResponse.setMessage("Join failed");
+            createStoreResponse.setScreen("PlaceJoin"); // 다시 가입페이지로 이동
         }
         return createStoreResponse;
     }
@@ -100,23 +103,26 @@ public class StoreApiController {
         private String address;
         private String detailAddr;
     }
+    /*사업장 생성, 가입 Response DTO*/
     @Data @Setter
     @AllArgsConstructor @NoArgsConstructor
     static class CreateAndJoinStoreResponse {
         private Long memberId;
         private Long storeId;
         private String message;
+        private String screen;
 
         @JsonDeserialize(using= LocalDateDeserializer.class)
         @JsonSerialize(using= LocalDateSerializer.class)
         private LocalDate belongDate;
 
         /*try-catch문으로 인해 생성자에서 받을 수 없으므로 정보를 삽입하는 메소드 사용*/
-        public void setBelongInfo(Long memberId, Long storeId, LocalDate belongDate, String message) {
+        public void setBelongInfo(Long memberId, Long storeId, LocalDate belongDate, String message, String screen) {
             this.memberId = memberId;
             this.storeId = storeId;
             this.belongDate = belongDate;
             this.message = message;
+            this.screen = screen;
         }
     }
 

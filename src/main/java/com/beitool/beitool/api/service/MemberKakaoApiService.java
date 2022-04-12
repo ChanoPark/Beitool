@@ -87,29 +87,6 @@ public class MemberKakaoApiService {
     /*컨트롤러에서 카카오 엑세스 토큰을 받아 회원정보 불러오는 API 호출*/
     /*신규 유저와 기존 유저 구분(직급 유/무까지)*/
     public void checkNewMember(AuthorizationKakaoDto authorizationKakaoDto) {
-//        String token = authorizationKakaoDto.getAccessToken();
-//        System.out.println("***token = " + token);
-//
-//        //헤더
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Authorization", "Bearer " + token); //데이터를 두 번 저장할 경우 set은 덮어쓰고, add는 추가되어 두개가 조회됌.
-//        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-//
-//        //Http 엔티티로 조합
-//        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
-//
-//        //카카오에게 POST 요청
-//        ResponseEntity<String> response = restTemplate.exchange(
-//                "https://kapi.kakao.com/v2/user/me",
-//                HttpMethod.POST,
-//                entity,
-//                String.class
-//        );
-
-//        System.out.println("***Response: " + response.getBody());
-//        String responseBody = response.getBody();
-
-
 
         try {
             Map<String, Object> memberInfo = getMemberInfoFromAccessToken(authorizationKakaoDto.getAccessToken());
@@ -129,8 +106,13 @@ public class MemberKakaoApiService {
                 member.setPosition(MemberPosition.NoPosition);
                 memberRepository.save(member);
                 authorizationKakaoDto.setScreen("UserSelect");
-
-            }
+            } else{ //기존 유저
+                Member findMember = memberRepository.findOne(kakaoUserId);
+                if (findMember.getPosition()==MemberPosition.NoPosition)
+                    authorizationKakaoDto.setScreen("UserSelect"); //직급이 없으면 직급 선택
+                else
+                    authorizationKakaoDto.setScreen("MainScreen"); //직급이 있으면 메인 화면면
+           }
             /*사업장 생성,등록과 직급을 동시에 하기 때문에, 직급은 무조건 없다.*/
 //            else { //기존 유저
 //                //직급 분간해서 페이지 요청

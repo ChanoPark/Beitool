@@ -36,12 +36,14 @@ public class MemberSocialApiController {
             Member findMember = memberRepository.findByRefreshToken(token.getRefreshToken());
 
             if (findMember.getRefreshToken() == "InvalidUser") { //리프레시 토큰이 잘못된 회원이라면 다시 로그인
+                System.out.println("***리프레시토큰이 Invalid***");
                 token.setScreen("LoginScreen");
                 return token;
             }
             kakaoApiService.updateAccessToken(token, findMember, token.getRefreshToken()); //리프레시토큰으로 갱신
             kakaoApiService.getTokenInfo(token); //토큰 업데이트 후, 회원 정보 확인
         }
+        System.out.println("*******************");
         return token;
     }
 
