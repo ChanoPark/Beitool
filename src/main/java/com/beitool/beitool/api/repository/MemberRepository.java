@@ -52,11 +52,11 @@ public class MemberRepository {
         return findMembers.get(0); //한명만 조회될꺼니까
     }
 
-    public List<Member> findByName(String name) {
-        return em.createQuery("select m from Member m where m.name = :name", Member.class)
-                .setParameter("name", name) // :name은 파라미터를 바인딩하는것
-                .getResultList();
-    }
+//    public List<Member> findByName(String name) {
+//        return em.createQuery("select m from Member m where m.name = :name", Member.class)
+//                .setParameter("name", name) // :name은 파라미터를 바인딩하는것
+//                .getResultList();
+//    }
 
     @Transactional //리프레시 토큰 업데이트
     public void updateRefreshToken(Member member, String newRefreshToken) {

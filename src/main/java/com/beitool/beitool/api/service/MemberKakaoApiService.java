@@ -3,6 +3,7 @@ package com.beitool.beitool.api.service;
 import com.beitool.beitool.api.dto.AuthorizationKakaoDto;
 import com.beitool.beitool.api.dto.TokenInfoFromKakaoDto;
 import com.beitool.beitool.api.dto.UpdateTokenFromKakaoDto;
+import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
@@ -39,6 +40,7 @@ public class MemberKakaoApiService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
+    private final BelongWorkInfoRepository belongWorkInfoRepository;
 
     /*컨트롤러에서 엑세스토큰을 받으면(프론트에서 로그인하면) 사용자 확인 & 토큰 만료 확인*/
     /*토큰 정보 확인*/
@@ -103,16 +105,15 @@ public class MemberKakaoApiService {
 
             if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
                 Member member = new Member(kakaoUserId, authorizationKakaoDto.getRefreshToken());
-                member.setPosition(MemberPosition.NoPosition);
                 memberRepository.save(member);
                 authorizationKakaoDto.setScreen("UserSelect");
-            } else{ //기존 유저
+            } else{ //기존 유저 -> 소속 여부 확인
                 Member findMember = memberRepository.findOne(kakaoUserId);
-                if (findMember.getPosition()==MemberPosition.NoPosition)
-                    authorizationKakaoDto.setScreen("UserSelect"); //직급이 없으면 직급 선택
+                if (belongWorkInfoRepository.findMemberAtBelong(findMember) > 0)
+                    authorizationKakaoDto.setScreen("MainScreen"); //소속된 곳이 있으면 메인 화면으로 이동
                 else
-                    authorizationKakaoDto.setScreen("MainScreen"); //직급이 있으면 메인 화면면
-           }
+                    authorizationKakaoDto.setScreen("UserSelect"); //소속된 곳이 없으면 직급 선택으로 이동
+            }
             /*사업장 생성,등록과 직급을 동시에 하기 때문에, 직급은 무조건 없다.*/
 //            else { //기존 유저
 //                //직급 분간해서 페이지 요청

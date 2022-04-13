@@ -43,19 +43,19 @@ public class MemberSocialApiController {
             kakaoApiService.updateAccessToken(token, findMember, token.getRefreshToken()); //리프레시토큰으로 갱신
             kakaoApiService.getTokenInfo(token); //토큰 업데이트 후, 회원 정보 확인
         }
-        System.out.println("*******************");
+        System.out.println("***예외 없이 로그인 성공");
         return token;
     }
 
     /*직급 선택*/
     /*직급 선택할 때, 가게 등록이면 사장이고, 가입이면 직원이기 때문에 한 번에 처리하는 것으로 함.*/
-    @PostMapping("/register/position/")
-    public PositionResponse setPosition(@RequestBody PositionRequest position) {
-        System.out.println("**넘어온거: " + position);
-        String screen = memberService.setPosition(position.getId(), position.getPosition());
+//    @PostMapping("/register/position/")
+//    public PositionResponse setPosition(@RequestBody PositionRequest position) {
+//        System.out.println("**넘어온거: " + position);
+//        String screen = memberService.setPosition(position.getId(), position.getPosition());
 
-        return new PositionResponse(position.getId(), position.getPosition(), screen);
-    }
+//        return new PositionResponse(position.getId(), position.getPosition(), screen);
+//    }
 
     /*-----DTO-----*/
 

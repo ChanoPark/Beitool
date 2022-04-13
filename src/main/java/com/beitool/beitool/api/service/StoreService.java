@@ -4,6 +4,7 @@ import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
@@ -111,7 +112,7 @@ public class StoreService {
                 storeRepository.findStoreByCode(code);
                 code=-1;
                 continue;
-            }catch(NoResultException e) {
+            }catch(NoResultException e) { //사업장 코드가 중복되지 않아 조회되지 않음.
                 break;
             }
         }
@@ -119,9 +120,9 @@ public class StoreService {
     }
 
     /*사장이 사업장을 생성함과 동시에 사업장에 소속되기 위한 메소드*/
-    public LocalDate joinStore(Member member, Store store) {
+    public LocalDate joinStore(Member member, Store store, String name) {
         LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        Belong belong = new Belong(member, store, currentTime);
+        Belong belong = new Belong(member, store, currentTime, MemberPosition.President ,name); //사업장 이름 = 가게 이름
 
         belongWorkInfoRepository.createBelong(belong);
 
@@ -129,11 +130,11 @@ public class StoreService {
     }
 
     /*사업장에 직원이 가입하기 위한 메소드*/
-    public Long joinStore(Member member, int inviteCode, LocalDate currentTime) throws NoResultException {
+    public Long joinStore(Member member, int inviteCode, LocalDate currentTime, String name) throws NoResultException {
         //사업장 코드로 사업장 조회
         Store store = storeRepository.findStoreByCode(inviteCode);
 
-        Belong belong = new Belong(member, store, currentTime);
+        Belong belong = new Belong(member, store, currentTime, MemberPosition.Employee, name);
         belongWorkInfoRepository.createBelong(belong);
 
         return store.getId();

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * 2022-04-10 사업장에 소속된 회원을 관리하기 위한 클래스
@@ -23,19 +22,28 @@ import java.time.LocalDateTime;
 public class Belong {
     
     /*사업장 생성 후 사장의 가입을 위한 생성자*/
-    public Belong(Member member, Store store, LocalDate currentTime) {
+    public Belong(Member member, Store store, LocalDate currentTime, MemberPosition position,String name) {
         this.member = member;
         this.store = store;
         this.belongDate = currentTime;
+        this.position = position;
+        this.name = name;
     }
 
     @Id @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="member_id")
     private Member member; //회원과 소속은 다대일관계(회원은 여러 사업장에 소속될 수 있음)
 
-    @Id @OneToOne(fetch=FetchType.LAZY)
+    @Id @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="store_id")
     private Store store; //가게와 소속은 다대일관계(가게는 여러 회원을 가질 수 있음)
+
+    @Column(name="member_name")
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    private MemberPosition position;
+
 
     @JsonDeserialize(using=LocalDateDeserializer.class)
     @JsonSerialize(using= LocalDateSerializer.class)
@@ -45,4 +53,7 @@ public class Belong {
     @Column(name="salary_hour")
     private int salaryHour; //시급
 
+    public void setPosition(MemberPosition position) {
+        this.position = position;
+    }
 }

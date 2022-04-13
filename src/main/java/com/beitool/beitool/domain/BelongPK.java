@@ -1,7 +1,6 @@
 package com.beitool.beitool.domain;
 
 import lombok.Data;
-
 import java.io.Serializable;
 
 /**

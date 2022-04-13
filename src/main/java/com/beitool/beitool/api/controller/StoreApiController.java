@@ -48,14 +48,14 @@ public class StoreApiController {
             Map<String, Object> memberInfo = memberKakaoApiService.getMemberInfoFromAccessToken(createStoreRequest.getAccessToken());
             Long memberId = (Long) memberInfo.get("id");
             Member findMember = memberRepository.findOne(memberId);
-            memberService.setPosition(memberId, createStoreRequest.getStatus());
+//            memberService.setPosition(memberId, createStoreRequest.getStatus());
 
             //사업장 생성
             Store store = storeService.createStore(createStoreRequest.placeName,
                     createStoreRequest.address, createStoreRequest.detailAddr);
 
             //생성된 사업장에 사장 소속시키기
-            LocalDate joinDate = storeService.joinStore(findMember, store);
+            LocalDate joinDate = storeService.joinStore(findMember, store, createStoreRequest.getPlaceName());
 
             //ResponseDTO에 정보 삽입(try-catch문으로 인해 생성자에서 바로 삽입을 못함->설계를 잘하면 한번에 할 수 있지 않을까?)
             createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Successful join", "MainScreen");
@@ -77,11 +77,11 @@ public class StoreApiController {
             Map<String, Object> memberInfo = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
             Long memberId = (Long) memberInfo.get("id");
             Member findMember = memberRepository.findOne(memberId);
-            memberService.setPosition(memberId, joinStoreRequest.getStatus());
+//            memberService.setPosition(memberId, joinStoreRequest.getStatus());
 
             //사업장 가입
             LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
-            Long storeId = storeService.joinStore(findMember,joinStoreRequest.getInviteCode(), currentTime);
+            Long storeId = storeService.joinStore(findMember,joinStoreRequest.getInviteCode(), currentTime, joinStoreRequest.getUserName());
             createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Successful join", "MainScreen");
 
         } catch (JsonProcessingException e) {

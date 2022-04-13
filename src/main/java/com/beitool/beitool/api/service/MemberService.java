@@ -21,18 +21,19 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     /*직급 결정*/ //->지금은 직급 선택 방법이 바뀌었지만, 추후 직급 수정 기능을 감안해서 id와 position을 같이 받는 것으로 유지.
-    public String setPosition(Long id, String position) {
-        Member member = memberRepository.findOne(id);
-        String screen = "redirect:/";
-        if (position.equals("President")) {
-            member.setPosition(MemberPosition.President);
-            screen = "PlaceRegister";
-            System.out.println("**직급적용");
-        } else if (position.equals("Employee")) {
-            member.setPosition(MemberPosition.Employee);
-            screen = "PlaceJoin";
-        }
-        System.out.println("***직급" + member.getPosition() + "***화면:" + screen);
-        return screen;
-    }
+    /**추후 직급 수정으로 변경 예정**/
+//    public String setPosition(Long id, String position) {
+//        Member member = memberRepository.findOne(id);
+//        String screen = "redirect:/";
+//        if (position.equals("President")) {
+//            member.setPosition(MemberPosition.President);
+//            screen = "PlaceRegister";
+//            System.out.println("**직급적용");
+//        } else if (position.equals("Employee")) {
+//            member.setPosition(MemberPosition.Employee);
+//            screen = "PlaceJoin";
+//        }
+//        System.out.println("***직급" + member.getPosition() + "***화면:" + screen);
+//        return screen;
+//    }
 }

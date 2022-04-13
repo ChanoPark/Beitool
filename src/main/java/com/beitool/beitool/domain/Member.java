@@ -4,6 +4,10 @@ import lombok.Getter;
 
 import javax.persistence.*;
 
+/**
+ * 2022-03-27 회원 엔티티
+ * Implemented by Chanos
+ */
 @Entity
 @Getter @Table(name="member")
 public class Member {
@@ -19,20 +23,11 @@ public class Member {
     @Column(name="member_id")
     private Long id;
 
-    @Column(name="member_name")
-    private String name;
-
     @Column(name="refresh_token")
     private String refreshToken;
-
-    @Enumerated(EnumType.STRING)
-    private MemberPosition position;
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
 
-    public void setPosition(MemberPosition position) {
-        this.position = position;
-    }
 }
