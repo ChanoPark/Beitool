@@ -3,14 +3,15 @@ package com.beitool.beitool.api.service;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
+import com.beitool.beitool.domain.Store;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 2022-04-02 회원과 관련된 서비스를 제공하는 클래스
- * 1. 직급 갱신
- *
+ * 1.직급 갱신
+ * 2.사용중인 사업장 변경
  * Implemented by Chanos
  */
 @Service
@@ -36,4 +37,9 @@ public class MemberService {
 //        System.out.println("***직급" + member.getPosition() + "***화면:" + screen);
 //        return screen;
 //    }
+
+    /*사용중인 사업장 변경*/
+    public void changeStore(Member member, Store store) {
+        member.setActiveStore(store);
+    }
 }

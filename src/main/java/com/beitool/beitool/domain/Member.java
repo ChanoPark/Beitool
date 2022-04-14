@@ -19,6 +19,11 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
+    @OneToOne(fetch=FetchType.LAZY)
+    @Column(name="active_store")
+    @JoinColumn(name="id")
+    private Store activeStore;
+
     @Id
     @Column(name="member_id")
     private Long id;
@@ -29,5 +34,6 @@ public class Member {
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
+    public void setActiveStore(Store store) {this.activeStore = store;}
 
 }

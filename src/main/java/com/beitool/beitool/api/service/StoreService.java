@@ -32,6 +32,7 @@ import java.util.Map;
  * 3.사업장 코드 생성(5자리 난수)
  * 4.사업장 생성과 동시에 사장이 소속
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
+ * 6.출,퇴근 시 현재 위치와 사업장 위치 거리 계산
  *
  * Implemented by Chanos
  */
@@ -124,8 +125,9 @@ public class StoreService {
         LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
         Belong belong = new Belong(member, store, currentTime, MemberPosition.President ,name); //사업장 이름 = 가게 이름
 
-        belongWorkInfoRepository.createBelong(belong);
+        member.setActiveStore(store); //회원의 사용중인 사업장 디폴트값 세팅
 
+        belongWorkInfoRepository.createBelong(belong);
         return currentTime;
     }
 
@@ -135,8 +137,15 @@ public class StoreService {
         Store store = storeRepository.findStoreByCode(inviteCode);
 
         Belong belong = new Belong(member, store, currentTime, MemberPosition.Employee, name);
+
+        member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
         belongWorkInfoRepository.createBelong(belong);
 
         return store.getId();
+    }
+
+    /*출,퇴근 시 현재 위치와 사업장 위치 거리 계산*/
+    public void calculateDistance(double memberLon, double memberLat) {
+
     }
 }

@@ -38,3 +38,4 @@ out/
 
 ### Add By Chanos ###
 application.yml
+webConfig.class

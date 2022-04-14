@@ -45,8 +45,7 @@ public class StoreApiController {
 
         //회원 직급 등록(사장)
         try {
-            Map<String, Object> memberInfo = memberKakaoApiService.getMemberInfoFromAccessToken(createStoreRequest.getAccessToken());
-            Long memberId = (Long) memberInfo.get("id");
+            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(createStoreRequest.getAccessToken());
             Member findMember = memberRepository.findOne(memberId);
 //            memberService.setPosition(memberId, createStoreRequest.getStatus());
 
@@ -74,8 +73,7 @@ public class StoreApiController {
 
         try {
             //회원 직급 등록(직원)
-            Map<String, Object> memberInfo = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
-            Long memberId = (Long) memberInfo.get("id");
+            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
             Member findMember = memberRepository.findOne(memberId);
 //            memberService.setPosition(memberId, joinStoreRequest.getStatus());
 

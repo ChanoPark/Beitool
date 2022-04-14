@@ -2,9 +2,12 @@ package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.AuthorizationKakaoDto;
 import com.beitool.beitool.api.repository.MemberRepository;
+import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.MemberService;
 import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.Store;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.web.client.HttpClientErrorException;
 * 회원과 관련된 요청을 처리하는 컨트롤러 (로그인/회원가입)
 * 1.엑세스 토큰을 받아 회원 정보 확인(신규/기존)
 * 2.직급을 받아 직급 선택(deprecated)
+* 3.회원이 사용하는 사업장 변경
 * Implemented By Chanos
 * */
 @RestController
@@ -24,6 +28,8 @@ public class MemberSocialApiController {
     private final MemberKakaoApiService kakaoApiService;
     private final MemberService memberService;
     private final MemberRepository memberRepository;
+    private final MemberKakaoApiService memberKakaoApiService;
+    private final StoreRepository storeRepository;
 
     /*로그인 후 엑세스토큰으로 회원 확인(신규/기존) */
     @PostMapping("/login/kakao")
@@ -56,6 +62,22 @@ public class MemberSocialApiController {
 
 //        return new PositionResponse(position.getId(), position.getPosition(), screen);
 //    }
+
+    /*회원이 사용하는 사업장 변경*/
+    @PostMapping("/change/store")
+    public void changeStore(@RequestBody String accessToken, Long storeId) {
+        try {
+            Long findMemberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+            Member member = memberRepository.findOne(findMemberId);
+
+            Store store =storeRepository.findOne(storeId);
+
+            memberService.changeStore(member, store);
+        } catch(JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     /*-----DTO-----*/
 
