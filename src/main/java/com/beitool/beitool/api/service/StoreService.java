@@ -1,11 +1,14 @@
 package com.beitool.beitool.api.service;
 
+import com.beitool.beitool.api.dto.StoreAddressResponseDto;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -32,7 +35,7 @@ import java.util.Map;
  * 3.사업장 코드 생성(5자리 난수)
  * 4.사업장 생성과 동시에 사장이 소속
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
- * 6.출,퇴근 시 현재 위치와 사업장 위치 거리 계산
+ * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
  *
  * Implemented by Chanos
  */
@@ -43,6 +46,8 @@ public class StoreService {
     private final RestTemplate restTemplate;
     private final StoreRepository storeRepository;
     private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final MemberRepository memberRepository;
+    private final MemberKakaoApiService memberKakaoApiService;
 
     /*사업장 생성*/
     public Store createStore(String storeName, String address, String addressDetail) {
@@ -144,8 +149,23 @@ public class StoreService {
         return store.getId();
     }
 
-    /*출,퇴근 시 현재 위치와 사업장 위치 거리 계산*/
-    public void calculateDistance(double memberLon, double memberLat) {
+    /*지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
+    public StoreAddressResponseDto getStoreAddressAndAllowDistance(String accessToken) {
+        double lat = 0.0, lon = 0.0;
+        int allowDistance = 0;
 
+        try {
+            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+            Store findActiveStore = memberRepository.findOne(memberId).getActiveStore();
+            Store findStore = storeRepository.findOne(findActiveStore.getId());
+            lat = findStore.getLatitude();
+            lon = findStore.getLongitude();
+            allowDistance = findStore.getAllowDistance();
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return new StoreAddressResponseDto(lat, lon, allowDistance);
     }
 }

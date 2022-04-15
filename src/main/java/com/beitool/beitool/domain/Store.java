@@ -25,6 +25,7 @@ public class Store {
         this.addressDetail=addressDetail;
         this.latitude=latitude;
         this.longitude=longitude;
+        this.allowDistance=500; //출퇴근 허용거리 디폴트 500M
     }
 
 

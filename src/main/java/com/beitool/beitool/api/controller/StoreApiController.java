@@ -1,6 +1,8 @@
 package com.beitool.beitool.api.controller;
 
+import com.beitool.beitool.api.dto.StoreAddressResponseDto;
 import com.beitool.beitool.api.repository.MemberRepository;
+import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.MemberService;
 import com.beitool.beitool.api.service.StoreService;
@@ -12,17 +14,21 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.NoResultException;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Map;
 
 /**
  * 2022-04-10 사업장과 관련된 요청을 처리하는 컨트롤러
+ * 1.사업장 생성
+ * 2.사업장 가입
+ * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
  * 예상되는 기능: 사업장 생성, 가입, 사업장 정보 수정, (여러 개의 사업장 처리? 구분? 정도 할 수도 있지 않을까?)
  * Implemented by Chanos
  */
@@ -33,6 +39,7 @@ public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
+    private final StoreRepository storeRepository;
 
     /*사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
@@ -90,6 +97,12 @@ public class StoreApiController {
         }
         return createStoreResponse;
     }
+    /*지도에 들어왔을 때, 사업장 위도,경도값 반환*/
+    @GetMapping("/map/")
+    public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestBody String accessToken) {
+        StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
+        return storeAddressAndAllowDistance;
+    }
 
     /*-----DTO-----*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
@@ -132,4 +145,5 @@ public class StoreApiController {
         private String userName;
         private int inviteCode;
     }
+
 }
