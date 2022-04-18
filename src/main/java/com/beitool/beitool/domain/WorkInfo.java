@@ -2,13 +2,12 @@ package com.beitool.beitool.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Getter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -21,6 +20,12 @@ import java.time.LocalDateTime;
 @Getter @Table(name="work_info")
 public class WorkInfo {
 
+    public WorkInfo(Member member, Store store, LocalDateTime workStartTime) {
+        this.member = member;
+
+    }
+
+
     @Id @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="member_id")
     public Member member;
@@ -29,18 +34,18 @@ public class WorkInfo {
     @JoinColumn(name="store_id")
     public Store store;
 
-    @JsonDeserialize(using=LocalDateTimeDeserializer.class)
-    @JsonSerialize(using=LocalDateTimeSerializer.class)
-    @Column(name="work_date")
-    public LocalDateTime workDate; //근로 날짜
+//    @JsonDeserialize(using=LocalDateTimeDeserializer.class)
+//    @JsonSerialize(using=LocalDateTimeSerializer.class)
+//    @Column(name="work_date")
+//    public LocalDateTime workDate; //근로 날짜
 
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_start_time")
-    public LocalDateTime workStartTime; //출근 시간
+    public LocalDate workStartTime; //출근 시간
 
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_end_time")
-    public LocalDateTime workEndTime; //퇴근 시간
+    public LocalDate workEndTime; //퇴근 시간
 }

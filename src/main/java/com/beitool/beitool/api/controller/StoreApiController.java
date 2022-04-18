@@ -14,13 +14,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.NoResultException;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
@@ -29,6 +27,7 @@ import java.time.ZoneId;
  * 1.사업장 생성
  * 2.사업장 가입
  * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
+ * 4.출근
  * 예상되는 기능: 사업장 생성, 가입, 사업장 정보 수정, (여러 개의 사업장 처리? 구분? 정도 할 수도 있지 않을까?)
  * Implemented by Chanos
  */
@@ -47,13 +46,13 @@ public class StoreApiController {
         System.out.println("***사업장 생성 createStoreRequest : " + createStoreRequest);
 
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
-        createStoreResponse.setMessage("Join failed");
+        createStoreResponse.setMessage("Failed");
         createStoreResponse.setScreen("PlaceRegister");
 
         //회원 직급 등록(사장)
         try {
             Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(createStoreRequest.getAccessToken());
-            Member findMember = memberRepository.findOne(memberId);
+            Member member = memberRepository.findOne(memberId);
 //            memberService.setPosition(memberId, createStoreRequest.getStatus());
 
             //사업장 생성
@@ -61,10 +60,10 @@ public class StoreApiController {
                     createStoreRequest.address, createStoreRequest.detailAddr);
 
             //생성된 사업장에 사장 소속시키기
-            LocalDate joinDate = storeService.joinStore(findMember, store, createStoreRequest.getPlaceName());
+            LocalDate joinDate = storeService.joinStore(member, store, createStoreRequest.getPlaceName());
 
             //ResponseDTO에 정보 삽입(try-catch문으로 인해 생성자에서 바로 삽입을 못함->설계를 잘하면 한번에 할 수 있지 않을까?)
-            createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Successful join", "MainScreen");
+            createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Success", "MainScreen");
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -87,18 +86,18 @@ public class StoreApiController {
             //사업장 가입
             LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
             Long storeId = storeService.joinStore(findMember,joinStoreRequest.getInviteCode(), currentTime, joinStoreRequest.getUserName());
-            createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Successful join", "MainScreen");
+            createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Success", "MainScreen");
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         } catch (NoResultException e) { //올바르지 않은 사업장 코드
-            createStoreResponse.setMessage("Join failed");
+            createStoreResponse.setMessage("failed");
             createStoreResponse.setScreen("PlaceJoin"); // 다시 가입페이지로 이동
         }
         return createStoreResponse;
     }
     /*지도에 들어왔을 때, 사업장 위도,경도값 반환*/
-    @GetMapping("/map/")
+    @PostMapping("/store/map/")
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestBody String accessToken) {
         StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
         return storeAddressAndAllowDistance;

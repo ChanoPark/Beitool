@@ -67,9 +67,8 @@ public class MemberSocialApiController {
     @PostMapping("/change/store")
     public void changeStore(@RequestBody String accessToken, Long storeId) {
         try {
-            Long findMemberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
-            Member member = memberRepository.findOne(findMemberId);
-
+            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+            Member member = memberRepository.findOne(memberId);
             Store store =storeRepository.findOne(storeId);
 
             memberService.changeStore(member, store);
