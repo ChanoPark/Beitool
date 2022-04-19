@@ -13,4 +13,5 @@ public class StoreAddressResponseDto {
     private double latitude; //사업장 위도
     private double longitude; //사업장 경도
     private int allowDistance; //출퇴근 허용 거리
+    private String message; //response 메세지
 }

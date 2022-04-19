@@ -91,7 +91,7 @@ public class StoreApiController {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         } catch (NoResultException e) { //올바르지 않은 사업장 코드
-            createStoreResponse.setMessage("failed");
+            createStoreResponse.setMessage("Failed");
             createStoreResponse.setScreen("PlaceJoin"); // 다시 가입페이지로 이동
         }
         return createStoreResponse;

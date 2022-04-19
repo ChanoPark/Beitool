@@ -32,29 +32,41 @@ public class WorkService {
     private final StoreRepository storeRepository;
 
     /*출퇴근*/
-    public void workCommute(String workType, String accessToken) {
+    public String workCommute(String workType, String accessToken) {
         System.out.println("***workType:" + workType + " accessToken:" + accessToken);
+        String result = "Falied";
         try {
             Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
             Member member = memberRepository.findOne(memberId);
+            Store store = storeRepository.findOne(member.getActiveStore().getId()); //현재 일하는 사업장
             LocalDateTime currentTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
-            if(workType.equals("onWork")) { //출근이면 근로정보 생성
+            //출근이면 근로정보 생성
+            if(workType.equals("onWork")) { 
                 System.out.println("***출근");
-                
-                //근로정보 생성(출근)
-                WorkInfo workInfo = new WorkInfo(member, member.getActiveStore(),currentTime);
-                belongWorkInfoRepository.createWorkInfo(workInfo);
 
-            } else { //퇴근이면 근로정보 조회 후 퇴근정보 추가
+                //퇴근하지 않고 출근 버튼을 누르면 출근 불가능
+                if(belongWorkInfoRepository.findWorkInfo(member, store) == 0) {
+                    //근로정보 생성(출근)
+                    WorkInfo workInfo = new WorkInfo(member, member.getActiveStore(),currentTime);
+                    belongWorkInfoRepository.createWorkInfo(workInfo);
+                    result = "Success";
+                }
+            //퇴근이면 근로정보 조회 후 퇴근 정보 업데이트    
+            } else { 
                 System.out.println("***퇴근");
-                Store store = storeRepository.findOne(member.getActiveStore().getId()); //현재 일하는 사업장
 
-                //퇴근 정보 업데이트
-                belongWorkInfoRepository.findWorkInfo(member, store, currentTime);
+                //출근하지 않고 퇴근 버튼을 누르면 퇴근 불가능
+                if(belongWorkInfoRepository.findWorkInfo(member, store) > 0) {
+                    //퇴근 정보 업데이트
+                    belongWorkInfoRepository.updateOffWork(member, store, currentTime);
+                    result = "Success";
+                }
             }
         } catch(JsonProcessingException e) {
             e.printStackTrace();
         }
+        System.out.println("***출퇴근 완료");
+        return result;
     }
 }

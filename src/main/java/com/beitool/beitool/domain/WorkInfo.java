@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
  * Implemented by Chanos
  */
 @Entity
-@IdClass(BelongPK.class)
 @Getter @Table(name="work_info") @NoArgsConstructor
 public class WorkInfo {
 
@@ -27,14 +25,17 @@ public class WorkInfo {
         this.workStartTime = workStartTime;
     }
 
+    @Id @GeneratedValue
+    @Column(name="work_info_id")
+    private Long id;
 
-    @Id @ManyToOne(fetch=FetchType.LAZY)
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="member_id")
-    public Member member;
+    private Member member;
 
-    @Id @ManyToOne(fetch=FetchType.LAZY)
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="store_id")
-    public Store store;
+    private Store store;
 
 //    @JsonDeserialize(using=LocalDateTimeDeserializer.class)
 //    @JsonSerialize(using=LocalDateTimeSerializer.class)
@@ -44,10 +45,10 @@ public class WorkInfo {
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_start_time")
-    public LocalDateTime workStartTime; //출근 시간
+    private LocalDateTime workStartTime; //출근 시간
 
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_end_time")
-    public LocalDateTime workEndTime; //퇴근 시간
+    private LocalDateTime workEndTime; //퇴근 시간
 }

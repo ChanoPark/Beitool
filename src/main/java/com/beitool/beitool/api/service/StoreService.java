@@ -153,19 +153,27 @@ public class StoreService {
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(String accessToken) {
         double lat = 0.0, lon = 0.0;
         int allowDistance = 0;
+        String isWorking = "error";
 
         try {
             Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+            Member findMember = memberRepository.findOne(memberId);
             Store findActiveStore = memberRepository.findOne(memberId).getActiveStore();
             Store findStore = storeRepository.findOne(findActiveStore.getId());
             lat = findStore.getLatitude();
             lon = findStore.getLongitude();
             allowDistance = findStore.getAllowDistance();
 
+            if (belongWorkInfoRepository.findWorkInfo(findMember, findStore) > 0) {
+                isWorking = "working";
+            } else {
+                isWorking = "noWorking";
+            }
+
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
 
-        return new StoreAddressResponseDto(lat, lon, allowDistance);
+        return new StoreAddressResponseDto(lat, lon, allowDistance, isWorking);
     }
 }
