@@ -24,8 +24,6 @@ public class WorkApiController {
     public void workCommute(@RequestBody CommuteRequestDto commuteRequestDto) {
         //출근(onWork)인지 퇴근(offwork)인지 + 토큰
         workService.workCommute(commuteRequestDto.getWorkType(), commuteRequestDto.getAccessToken());
-    
-        
     }
 
     /*출퇴근 request dto (일단)*/

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -17,12 +18,13 @@ import java.time.LocalDateTime;
  */
 @Entity
 @IdClass(BelongPK.class)
-@Getter @Table(name="work_info")
+@Getter @Table(name="work_info") @NoArgsConstructor
 public class WorkInfo {
 
     public WorkInfo(Member member, Store store, LocalDateTime workStartTime) {
         this.member = member;
-
+        this.store = store;
+        this.workStartTime = workStartTime;
     }
 
 
@@ -42,10 +44,10 @@ public class WorkInfo {
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_start_time")
-    public LocalDate workStartTime; //출근 시간
+    public LocalDateTime workStartTime; //출근 시간
 
     @JsonDeserialize(using=LocalDateTimeDeserializer.class)
     @JsonSerialize(using=LocalDateTimeSerializer.class)
     @Column(name="work_end_time")
-    public LocalDate workEndTime; //퇴근 시간
+    public LocalDateTime workEndTime; //퇴근 시간
 }

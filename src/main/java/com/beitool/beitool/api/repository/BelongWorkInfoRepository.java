@@ -53,13 +53,12 @@ public class BelongWorkInfoRepository {
 //    }
 
     /*퇴근(근로정보 수정)*/
-    public WorkInfo findWorkInfo(Member member, Store store, LocalDateTime currentTime) { //dateTime 이거 type 맞춰야될듯
-        return em.createQuery("update WorkInfo w set w.workEndTime = :currentTime" +
-                        " where w.member = :member and w.store = :store and w.workEndTime is null", WorkInfo.class)
+    public void findWorkInfo(Member member, Store store, LocalDateTime currentTime) {
+        em.createQuery("update WorkInfo w set w.workEndTime = :currentTime" +
+                        " where w.member = :member and w.store = :store and w.workEndTime is null") //update,delete쿼리는 대상만 가져오므로 클래스 명시X
                 .setParameter("currentTime", currentTime)
                 .setParameter("member", member)
                 .setParameter("store", store)
-                .getSingleResult();
-
+                .executeUpdate();
     }
 }
