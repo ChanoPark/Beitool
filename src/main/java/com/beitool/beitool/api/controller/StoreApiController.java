@@ -8,7 +8,6 @@ import com.beitool.beitool.api.service.MemberService;
 import com.beitool.beitool.api.service.StoreService;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -27,7 +26,8 @@ import java.time.ZoneId;
  * 1.사업장 생성
  * 2.사업장 가입
  * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
- * 4.메인 화면(사업장 이름, 추후 일정도 반환할 것으로 예상)
+ * 4.메인 화면(사업장 이름 반환, 나중에 일정도 반환할 것으로 예상)
+ * 5.사업장 변경(소속되어 있는 사업장 정보 반환)
  * 예상되는 기능: 사업장 생성, 가입, 사업장 정보 수정, (여러 개의 사업장 처리? 구분? 정도 할 수도 있지 않을까?)
  * Implemented by Chanos
  */
@@ -78,7 +78,6 @@ public class StoreApiController {
             //회원 직급 등록(직원)
             Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
             Member findMember = memberRepository.findOne(memberId);
-//            memberService.setPosition(memberId, joinStoreRequest.getStatus());
 
             //사업장 가입
             LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
@@ -96,6 +95,17 @@ public class StoreApiController {
         StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
         return storeAddressAndAllowDistance;
     }
+
+    /*메인 화면(사업장 이름)*/
+    @PostMapping("/store/main/")
+    public MainScreenResponse mainScreen(@RequestBody String accessToken) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Member member = memberRepository.findOne(memberId);
+
+        return new MainScreenResponse(member.getActiveStore().getName());
+    }
+
+
 
     /*-----DTO-----*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
@@ -120,7 +130,7 @@ public class StoreApiController {
         @JsonSerialize(using= LocalDateSerializer.class)
         private LocalDate belongDate;
 
-        /*try-catch문으로 인해 생성자에서 받을 수 없으므로 정보를 삽입하는 메소드 사용*/
+        //try-catch문으로 인해 생성자에서 받을 수 없으므로 정보를 삽입하는 메소드 사용
         public void setBelongInfo(Long memberId, Long storeId, LocalDate belongDate, String message, String screen) {
             this.memberId = memberId;
             this.storeId = storeId;
@@ -137,6 +147,12 @@ public class StoreApiController {
         private String status;
         private String userName;
         private int inviteCode;
+    }
+
+    /*메인화면에서 사업장 이름을 출력하기 위한 Response DTO*/
+    @Data @AllArgsConstructor
+    static class MainScreenResponse {
+        private String storeName;
     }
 
 }
