@@ -7,7 +7,6 @@ import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.MemberService;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -66,16 +65,11 @@ public class MemberSocialApiController {
     /*회원이 사용하는 사업장 변경*/
     @PostMapping("/change/store")
     public void changeStore(@RequestBody String accessToken, Long storeId) {
-        try {
-            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
-            Member member = memberRepository.findOne(memberId);
-            Store store =storeRepository.findOne(storeId);
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Member member = memberRepository.findOne(memberId);
+        Store store =storeRepository.findOne(storeId);
 
-            memberService.changeStore(member, store);
-        } catch(JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
+        memberService.changeStore(member, store);
     }
 
     /*-----DTO-----*/

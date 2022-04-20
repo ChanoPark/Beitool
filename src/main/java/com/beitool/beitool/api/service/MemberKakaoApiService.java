@@ -6,7 +6,6 @@ import com.beitool.beitool.api.dto.UpdateTokenFromKakaoDto;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.Member;
-import com.beitool.beitool.domain.MemberPosition;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,25 +89,24 @@ public class MemberKakaoApiService {
     /*신규 유저와 기존 유저 구분(직급 유/무까지)*/
     public void checkNewMember(AuthorizationKakaoDto authorizationKakaoDto) {
 
-        try {
-            Long kakaoUserId = getMemberInfoFromAccessToken(authorizationKakaoDto.getAccessToken());
+        Long kakaoUserId = getMemberInfoFromAccessToken(authorizationKakaoDto.getAccessToken());
 
-            //프론트에게 전해줄 회원ID
-            authorizationKakaoDto.setId(kakaoUserId);
+        //프론트에게 전해줄 회원ID
+        authorizationKakaoDto.setId(kakaoUserId);
 
-            System.out.println("***멤버 조회::" + memberRepository.findOne(kakaoUserId));
+        System.out.println("***멤버 조회::" + memberRepository.findOne(kakaoUserId));
 
-            if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
-                Member member = new Member(kakaoUserId, authorizationKakaoDto.getRefreshToken());
-                memberRepository.save(member);
-                authorizationKakaoDto.setScreen("UserSelect");
-            } else{ //기존 유저 -> 소속 여부 확인
-                Member findMember = memberRepository.findOne(kakaoUserId);
-                if (belongWorkInfoRepository.findMemberAtBelong(findMember) > 0)
-                    authorizationKakaoDto.setScreen("MainScreen"); //소속된 곳이 있으면 메인 화면으로 이동
-                else
-                    authorizationKakaoDto.setScreen("UserSelect"); //소속된 곳이 없으면 직급 선택으로 이동
-            }
+        if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
+            Member member = new Member(kakaoUserId, authorizationKakaoDto.getRefreshToken());
+            memberRepository.save(member);
+            authorizationKakaoDto.setScreen("UserSelect");
+        } else { //기존 유저 -> 소속 여부 확인
+            Member findMember = memberRepository.findOne(kakaoUserId);
+            if (belongWorkInfoRepository.findMemberAtBelong(findMember) > 0)
+                authorizationKakaoDto.setScreen("MainScreen"); //소속된 곳이 있으면 메인 화면으로 이동
+            else
+                authorizationKakaoDto.setScreen("UserSelect"); //소속된 곳이 없으면 직급 선택으로 이동
+        }
             /*사업장 생성,등록과 직급을 동시에 하기 때문에, 직급은 무조건 없다.*/
 //            else { //기존 유저
 //                //직급 분간해서 페이지 요청
@@ -122,9 +120,6 @@ public class MemberKakaoApiService {
 //                    authorizationKakaoDto.setScreen("MainScreen");
 //                }
 //            }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
     }
 
     /*리프레시 토큰을 사용해서 엑세스토큰 갱신*/
@@ -166,7 +161,8 @@ public class MemberKakaoApiService {
     }
 
     /*엑세스토큰을 통해 회원찾기*/
-    public Long getMemberInfoFromAccessToken(String accessToken) throws JsonProcessingException {
+    public Long getMemberInfoFromAccessToken(String accessToken) {
+        Long memberId = -1L; //예외 발생시 -1 반환
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken); //데이터를 두 번 저장할 경우 set은 덮어쓰고, add는 추가되어 두개가 조회됌.
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -184,9 +180,14 @@ public class MemberKakaoApiService {
 
         System.out.println("***Response: " + response.getBody());
         String responseBody = response.getBody();
-        Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
-        System.out.println("***id: " + memberInfo.get("id"));
+        try {
+            Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+            memberId = (Long) memberInfo.get("id");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
-        return (Long) memberInfo.get("id");
+
+        return memberId;
     }
 }

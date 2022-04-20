@@ -27,13 +27,13 @@ public class WorkApiController {
         return new CommuteResponseDto(workService.workCommute(isWorking, commuteRequestDto.getAccessToken()));
     }
 
-    /*출퇴근 request dto*/
+    /*출퇴근 request DTO*/
     @Data
     static class CommuteRequestDto {
         private String workType;
         private String accessToken;
     }
-
+    /*출퇴근 response DTO*/
     @Data @Setter
     static class CommuteResponseDto {
         private String message;

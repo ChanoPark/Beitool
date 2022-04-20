@@ -151,29 +151,23 @@ public class StoreService {
 
     /*지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(String accessToken) {
-        double lat = 0.0, lon = 0.0;
-        int allowDistance = 0;
-        String isWorking = "error";
+        String isWorking;
 
-        try {
-            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
-            Member findMember = memberRepository.findOne(memberId);
-            Store findActiveStore = memberRepository.findOne(memberId).getActiveStore();
-            Store findStore = storeRepository.findOne(findActiveStore.getId());
-            lat = findStore.getLatitude();
-            lon = findStore.getLongitude();
-            allowDistance = findStore.getAllowDistance();
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Member findMember = memberRepository.findOne(memberId);
 
-            if (belongWorkInfoRepository.findWorkInfo(findMember, findStore) > 0) {
-                isWorking = "working";
-            } else {
-                isWorking = "noWorking";
-            }
+        Store findActiveStore = memberRepository.findOne(memberId).getActiveStore();
+        Store findStore = storeRepository.findOne(findActiveStore.getId());
 
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        double lat = findStore.getLatitude();
+        double lon = findStore.getLongitude();
+        int allowDistance = findStore.getAllowDistance();
+
+        if (belongWorkInfoRepository.findWorkInfo(findMember, findStore) > 0) {
+            isWorking = "working";
+        } else {
+            isWorking = "noWorking";
         }
-
         return new StoreAddressResponseDto(lat, lon, allowDistance, isWorking);
     }
 }
