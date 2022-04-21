@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.Map;
+
 /*
 * 2022-03-26
 * 회원과 관련된 요청을 처리하는 컨트롤러 (로그인/회원가입)
@@ -33,8 +35,6 @@ public class MemberSocialApiController {
     /*로그인 후 엑세스토큰으로 회원 확인(신규/기존) */
     @PostMapping("/login/kakao")
     public AuthorizationKakaoDto getKakaoToken(@RequestBody AuthorizationKakaoDto token) {
-        System.out.println("***전달받은 토큰 = " + token);
-        System.out.println("***엑세스 토큰 = " + token.getAccessToken());
         try {
             kakaoApiService.getTokenInfo(token);
         } catch (HttpClientErrorException e) { //토큰이 만료된 경우
@@ -64,7 +64,10 @@ public class MemberSocialApiController {
 
     /*회원이 사용하는 사업장 변경*/
     @PostMapping("/change/store")
-    public void changeStore(@RequestBody String accessToken, Long storeId) {
+    public void changeStore(@RequestBody Map<String, String> param) {
+        String accessToken = param.get("accessToken");
+        Long storeId = Long.parseLong(param.get("storeId"));
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store =storeRepository.findOne(storeId);

@@ -15,9 +15,11 @@ import java.util.List;
  * 2022-04-11 회원-사업장 간 소속 및 근로정보를 위한 클래스
  * 1.소속 정보 생성(사업장 가입)
  * 2.출근 정보 생성(출근)
- * 3.소속 정보 조회(로그인 시 근로정보를 보고 신규회원인지 구분)
- * 4.근로 정보 조회(지도 들어갔을 때 출근상태인지 확인)
- * 5.근로 정보 수정(퇴근)
+ * 3.소속되어 있는 모든 사업장의 개수 조회(로그인 시 근로정보를 보고 신규회원인지 구분)
+ * 4.소속 정보 조회(회원과 사업장 정보를 통해 소속 정보 확인)
+ * 5.회원이 가입되어 있는 모든 소속정보 조회
+ * 6.근로 정보 조회(지도 들어갔을 때 출근상태인지 확인)
+ * 7.근로 정보 수정(퇴근)
  *
  * Implemented by Chanos
  */
@@ -36,12 +38,27 @@ public class BelongWorkInfoRepository {
     public void createWorkInfo(WorkInfo workInfo) {
         em.persist(workInfo);}
 
-    /*소속 정보 조회*/
-    public int findMemberAtBelong(Member member) {
-        List<Belong> findMembers = em.createQuery("select b from Belong b where b.member = :member", Belong.class)
+    /*소속되어 있는 모든 사업장의 개수 조회*/
+    public int findBelongCount(Member member) {
+        List<Belong> findBelongs = em.createQuery("select b from Belong b where b.member = :member", Belong.class)
                 .setParameter("member", member)
                 .getResultList();
-        return findMembers.size();
+        return findBelongs.size();
+    }
+
+    /*소속정보 조회*/
+    public Belong findBelongInfo(Member member, Store store) {
+        return em.createQuery("select b from Belong b where b.member = :member and b.store = :store", Belong.class)
+                .setParameter("member", member)
+                .setParameter("store", store)
+                .getSingleResult();
+    }
+
+    /*회원이 가입되어 있는 모든 소속정보 조회*/
+    public List<Belong> allBelongInfo(Member member) {
+        return em.createQuery("select b from Belong b where b.member = :member", Belong.class)
+                .setParameter("member", member)
+                .getResultList();
     }
 
     /*근로정보 조회*/
@@ -54,7 +71,7 @@ public class BelongWorkInfoRepository {
         return findWorkings.size();
     }
 
-    /*퇴근(근로정보 수정)*/
+    /*근로 정보 수정(퇴근)*/
     public void updateOffWork(Member member, Store store, LocalDateTime currentTime) {
         em.createQuery("update WorkInfo w set w.workEndTime = :currentTime" +
                         " where w.member = :member and w.store = :store and w.workEndTime is null") //update,delete쿼리는 대상만 가져오므로 클래스 명시X

@@ -102,7 +102,7 @@ public class MemberKakaoApiService {
             authorizationKakaoDto.setScreen("UserSelect");
         } else { //기존 유저 -> 소속 여부 확인
             Member findMember = memberRepository.findOne(kakaoUserId);
-            if (belongWorkInfoRepository.findMemberAtBelong(findMember) > 0)
+            if (belongWorkInfoRepository.findBelongCount(findMember) > 0)
                 authorizationKakaoDto.setScreen("MainScreen"); //소속된 곳이 있으면 메인 화면으로 이동
             else
                 authorizationKakaoDto.setScreen("UserSelect"); //소속된 곳이 없으면 직급 선택으로 이동

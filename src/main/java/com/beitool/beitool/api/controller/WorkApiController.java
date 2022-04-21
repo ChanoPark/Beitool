@@ -34,7 +34,7 @@ public class WorkApiController {
         private String accessToken;
     }
     /*출퇴근 response DTO*/
-    @Data @Setter
+    @Data
     static class CommuteResponseDto {
         private String message;
 
