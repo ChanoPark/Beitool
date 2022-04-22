@@ -1,4 +1,4 @@
-package com.beitool.beitool.api.dto;
+package com.beitool.beitool.api.dto.store;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

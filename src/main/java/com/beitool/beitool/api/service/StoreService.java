@@ -1,6 +1,8 @@
 package com.beitool.beitool.api.service;
 
-import com.beitool.beitool.api.dto.StoreAddressResponseDto;
+import com.beitool.beitool.api.dto.store.BelongedStore;
+import com.beitool.beitool.api.dto.store.GetBelongStoreInfoResponse;
+import com.beitool.beitool.api.dto.store.StoreAddressResponseDto;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
@@ -8,7 +10,6 @@ import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,6 +27,7 @@ import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,6 +38,7 @@ import java.util.Map;
  * 4.사업장 생성과 동시에 사장이 소속
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
  * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
+ * 7.사업장 변경(소속되어 있는 사업장 정보 반환)
  *
  * Implemented by Chanos
  */
@@ -169,5 +172,29 @@ public class StoreService {
             isWorking = "noWorking";
         }
         return new StoreAddressResponseDto(lat, lon, allowDistance, isWorking);
+    }
+
+    /*사업장 변경(소속되어 있는 사업장 정보 반환)*/
+    public GetBelongStoreInfoResponse getBelongStoreInfo(Member member) {
+        GetBelongStoreInfoResponse getBelongStoreInfoResponse = new GetBelongStoreInfoResponse();
+
+        //활성화된 사업장 소속 정보 조회
+        Belong activeStoreBelongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());
+        //활성화된 사업장 소속 정보 Response에 저장
+        getBelongStoreInfoResponse.setActiveStoreName(activeStoreBelongInfo.getName());
+        getBelongStoreInfoResponse.setActiveStorePosition(activeStoreBelongInfo.getPosition());
+
+        //소속되어 있는 모든 사업장 소속 정보
+        List<Belong> belongs = belongWorkInfoRepository.allBelongInfo(member);
+
+        for (Belong belong : belongs) {
+            String belongStoreName = belong.getStore().getName(); //소속된 사업장 이름
+            //취합된 소속된 사업장 정보를 BelongedStore 클래스에 모아서 객체 생성
+            BelongedStore belongedStore = new BelongedStore(belong.getName(), belongStoreName, belong.getPosition());
+            //HashMap에 소속된 사업장 정보 저장
+            getBelongStoreInfoResponse.setBelongedStore(belongedStore);
+        }
+        System.out.println("***사업장 정보 반환 완료");
+        return getBelongStoreInfoResponse;
     }
 }

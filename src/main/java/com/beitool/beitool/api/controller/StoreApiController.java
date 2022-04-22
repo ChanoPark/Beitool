@@ -1,13 +1,12 @@
 package com.beitool.beitool.api.controller;
 
-import com.beitool.beitool.api.dto.StoreAddressResponseDto;
+//import com.beitool.beitool.api.dto.store.StoreAddressResponseDto;
+import com.beitool.beitool.api.dto.store.*;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
-import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
-import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -21,9 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,7 +29,7 @@ import java.util.Map;
  * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
  * 4.메인 화면(사업장 이름 반환, 나중에 일정도 반환할 것으로 예상)
  * 5.사업장 변경(소속되어 있는 사업장 정보 반환)
- * 예상되는 기능: 사업장 생성, 가입, 사업장 정보 수정, (여러 개의 사업장 처리? 구분? 정도 할 수도 있지 않을까?)
+ * 예상되는 기능: 사업장 정보 수정 등
  * Implemented by Chanos
  */
 @RestController
@@ -118,28 +114,8 @@ public class StoreApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
-        GetBelongStoreInfoResponse getBelongStoreInfoResponse = new GetBelongStoreInfoResponse();
-
-        //활성화된 사업장 소속 정보 조회
-        Belong activeStoreBelongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());
-        //활성화된 사업장 소속 정보 Response에 저장
-        getBelongStoreInfoResponse.setActiveStoreName(activeStoreBelongInfo.getName());
-        getBelongStoreInfoResponse.setActiveStorePosition(activeStoreBelongInfo.getPosition());
-                
-        //소속되어 있는 모든 사업장 소속 정보
-        List<Belong> belongs = belongWorkInfoRepository.allBelongInfo(member);
-
-        for (Belong belong : belongs) {
-            String belongStoreName = belong.getStore().getName(); //소속된 사업장 이름
-            //취합된 소속된 사업장 정보를 BelongedStore 클래스에 모아서 객체 생성
-            BelongedStore belongedStore = new BelongedStore(belong.getName(), belongStoreName, belong.getPosition());
-            //HashMap에 소속된 사업장 정보 저장
-            getBelongStoreInfoResponse.setBelongedStore(belongedStore);
-        }
-        System.out.println("***사업장 정보 반환 완료");
-        return getBelongStoreInfoResponse;
+        return storeService.getBelongStoreInfo(member);
     }
-
 
     /*-----DTO-----*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
@@ -188,30 +164,4 @@ public class StoreApiController {
     static class GetActiveStoreInfo {
         private String storeName;
     }
-
-    /*사업장 변경 시 데이터를 전달하기 위한 Response DTO*/
-    @Data
-    static class GetBelongStoreInfoResponse {
-        private String activeStoreName;
-        private MemberPosition activeStorePosition;
-        private List<Map<String, BelongedStore>> belongedStore;
-
-        public GetBelongStoreInfoResponse() {
-            this.belongedStore = new ArrayList<>();
-        }
-
-        public void setBelongedStore(BelongedStore belongedStore) {
-            Map<String, BelongedStore> belongedStoreMap = new HashMap<>();
-            belongedStoreMap.put("belongedStore", belongedStore);
-            this.belongedStore.add(belongedStoreMap); //리스트안에 맵을 감싸서 보냄
-        }
-    }
-    /*소속된 사업장의 정보를 모으기 위한 클래스(GetBelongStoreInfoResponse에 포함됌)*/
-    @Data @AllArgsConstructor
-    static class BelongedStore {
-        private String storeName;
-        private String memberName;
-        private MemberPosition memberPosition;
-    }
-
 }
