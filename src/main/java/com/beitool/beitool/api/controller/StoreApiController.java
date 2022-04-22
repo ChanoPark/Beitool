@@ -38,7 +38,6 @@ public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
 
     /*사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
