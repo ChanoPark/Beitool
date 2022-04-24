@@ -18,10 +18,10 @@ import java.util.Map;
  * @author Chanos
  * @since 2022-04-22
  */
-public interface Board {
-    BoardResponseDto createPost(BoardRequestDto boardRequestDto); //게시글 작성
-    BoardResponseDto updatePost(BoardRequestDto boardRequestDto); //게시글 수정
-    BoardResponseDto readBoard(Map<String, String> param); //게시판 조회
-    BoardResponseDto readPost(Map<String, String> param); //게시글 조회
-    BoardResponseDto deletePost(Map<String, String> param); //게시글 삭제
+public interface BoardService {
+    BoardResponseDto createPost(String accessToken, String title, String content); //게시글 작성
+    BoardResponseDto updatePost(String accessToken, String title, String content); //게시글 수정
+    BoardResponseDto readBoard(Long boardId, String accessToken); //게시판 조회
+    BoardResponseDto readPost(Long postId, String accessToken); //게시글 조회
+    BoardResponseDto deletePost(Long postId, String accessToken); //게시글 삭제
 }
