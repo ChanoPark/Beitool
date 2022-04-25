@@ -1,6 +1,7 @@
 package com.beitool.beitool.api.dto.store;
 
 import com.beitool.beitool.domain.MemberPosition;
+import com.beitool.beitool.domain.Store;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class BelongedStore {
     private String storeName;
+    private Store store;
     private String memberName;
     private MemberPosition memberPosition;
 }
