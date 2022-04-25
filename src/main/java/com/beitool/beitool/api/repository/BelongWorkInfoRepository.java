@@ -56,8 +56,11 @@ public class BelongWorkInfoRepository {
 
     /*회원이 가입되어 있는 모든 소속정보 조회*/
     public List<Belong> allBelongInfo(Member member) {
-        return em.createQuery("select b from Belong b where b.member = :member", Belong.class)
+        Store activeStore = member.getActiveStore();
+        return em.createQuery("select b from Belong b" +
+                        " where b.member = :member and b.store NOT IN :activeStoreId", Belong.class)
                 .setParameter("member", member)
+                .setParameter("activeStoreId", activeStore) //활성화된 사업장 제외하고 목록 조회
                 .getResultList();
     }
 
