@@ -63,7 +63,7 @@ public class MemberSocialApiController {
 //    }
 
     /*회원이 사용하는 사업장 변경*/
-    @PostMapping("/change/store")
+    @PostMapping("/member/change/activestore/")
     public void changeStore(@RequestBody Map<String, String> param) {
         String accessToken = param.get("accessToken");
         Long storeId = Long.parseLong(param.get("storeId"));
