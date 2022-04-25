@@ -2,7 +2,6 @@ package com.beitool.beitool.api.service;
 
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.Member;
-import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,5 @@
 package com.beitool.beitool.api.repository;
 
-import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
 import org.springframework.stereotype.Repository;
 

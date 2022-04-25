@@ -34,7 +34,7 @@ public class WorkService {
     /*출퇴근*/
     public String workCommute(String workType, String accessToken) {
         System.out.println("***workType:" + workType + " accessToken:" + accessToken);
-        String result = "Falied";
+        String result = "Failed";
 
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);

@@ -21,7 +21,7 @@ public class WorkApiController {
     private final WorkService workService;
 
     /*출퇴근(프론트에서 결과만 받음)*/
-    @PostMapping("/work/commute/") //String workType, String accessToken는 dto로 바꿔받든가 해야될듯 지금 제대로 못받는 상황인거같음.
+    @PostMapping("/work/commute/")
     public CommuteResponseDto workCommute(@RequestBody CommuteRequestDto commuteRequestDto) {
         String isWorking = commuteRequestDto.getWorkType(); //출근인지 퇴근인지
         return new CommuteResponseDto(workService.workCommute(isWorking, commuteRequestDto.getAccessToken()));
