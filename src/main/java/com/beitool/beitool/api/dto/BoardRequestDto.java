@@ -10,8 +10,11 @@ import lombok.Data;
 @Data
 public class BoardRequestDto {
     private String accessToken;
+    private String boardType;
 
     //게시글 생성, 수정에 사용될 제목과 내용, 시간은 현재 시간.
     private String title;
     private String content;
+    
+    private Long id; //게시글 번호
 }
