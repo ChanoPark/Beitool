@@ -20,7 +20,7 @@ public class Member {
     }
 
     @OneToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="id")
+    @JoinColumn(name="active_store_id")
     private Store activeStore;
 
     @Id

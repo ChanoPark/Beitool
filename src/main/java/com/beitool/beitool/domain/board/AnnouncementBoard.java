@@ -1,5 +1,7 @@
-package com.beitool.beitool.domain;
+package com.beitool.beitool.domain.board;
 
+import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.Store;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -19,7 +21,7 @@ import java.time.LocalDateTime;
  * @author chanos
  * @since 2022-04-26
  */
-@Entity @DiscriminatorValue("announcement")
+@Entity @DiscriminatorValue("Announcement")
 @Getter @Table(name="announcement_board")
 @NoArgsConstructor
 public class AnnouncementBoard extends BoardDomain {
@@ -30,6 +32,11 @@ public class AnnouncementBoard extends BoardDomain {
         this.authorName = authorName;
         this.content = content;
         this.createdDate = createdDate;
+    }
+
+    public void updatePost(String title, String content) {
+        super.updatePost(title);
+        this.content = content;
     }
 
     @Id @GeneratedValue
@@ -45,4 +52,6 @@ public class AnnouncementBoard extends BoardDomain {
     @JsonDeserialize(using= LocalDateTimeDeserializer.class)
     @JsonSerialize(using= LocalDateTimeSerializer.class)
     private LocalDateTime createdDate;
+
+
 }

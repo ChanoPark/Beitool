@@ -1,8 +1,10 @@
-package com.beitool.beitool.domain;
+package com.beitool.beitool.domain.board;
 
+import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.Store;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -29,6 +31,19 @@ public abstract class BoardDomain {
         this.member = member;
         this.store = store;
         this.title = title;
+        this.isModified = false;
+    }
+
+    //제목 수정
+    public void updatePost(String title) {
+        this.title = title;
+        this.isModified = true;
+    }
+
+    //자식 클래스 찾기(게시판종류 판별)
+    public static Object findBoardType(String boardType) throws ClassNotFoundException {
+        String reflection = "com.beitool.beitool.domain.board." + boardType;
+        return Class.forName(reflection);
     }
 
     @Id @GeneratedValue
@@ -37,11 +52,19 @@ public abstract class BoardDomain {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="author_id")
+    @JsonIgnore
     private Member member;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="store_id")
+    @JsonIgnore
     private Store store;
 
     private String title;
+
+    @Column(name="is_modified")
+    private Boolean isModified;
+
+    @Column(insertable = false, updatable = false)
+    private String dtype;
 }
