@@ -1,4 +1,4 @@
-package com.beitool.beitool.api.dto;
+package com.beitool.beitool.api.dto.board;
 
 import com.beitool.beitool.domain.board.BoardDomain;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -24,7 +24,6 @@ public class BoardResponseDto {
     public BoardResponseDto(String message) {
         this.message=message;
     }
-    
 
     private String message; //결과를 알려주기 위한 message
 

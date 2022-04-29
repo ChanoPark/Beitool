@@ -1,4 +1,4 @@
-package com.beitool.beitool.api.dto;
+package com.beitool.beitool.api.dto.board;
 
 import lombok.Data;
 
