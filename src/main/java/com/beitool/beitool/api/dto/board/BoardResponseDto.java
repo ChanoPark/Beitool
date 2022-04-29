@@ -24,6 +24,7 @@ public class BoardResponseDto {
     public BoardResponseDto(String message) {
         this.message=message;
     }
+    
 
     private String message; //결과를 알려주기 위한 message
 
