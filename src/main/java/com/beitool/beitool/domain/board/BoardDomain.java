@@ -3,10 +3,15 @@ package com.beitool.beitool.domain.board;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * 게시판 공통 도메인을 묶은 클래스, 해당 클래스를 상속받아 구체적인 도메인을 작성한다.
@@ -27,25 +32,20 @@ import javax.persistence.*;
 public abstract class BoardDomain {
 
     //추상클래스의 생성자는 자식 클래스가 생성될 때 호출된다.
-    public BoardDomain(Member member, Store store, String title) {
+    public BoardDomain(Member member, Store store, String title, LocalDateTime createdDate) {
         this.member = member;
         this.store = store;
         this.title = title;
+        this.createdDate = createdDate;
         this.isModified = false;
     }
 
     //제목 수정
-    public void updatePost(String title) {
+    public void updatePost(String title, LocalDateTime modifiedTime) {
         this.title = title;
+        this.createdDate = modifiedTime;
         this.isModified = true;
     }
-
-    //자식 클래스 찾기(게시판종류 판별)
-    public static Object findBoardType(String boardType) throws ClassNotFoundException {
-        String reflection = "com.beitool.beitool.domain.board." + boardType;
-        return Class.forName(reflection);
-    }
-
     @Id @GeneratedValue
     @Column(name="post_id")
     private Long id;
@@ -61,6 +61,11 @@ public abstract class BoardDomain {
     private Store store;
 
     private String title;
+
+    @Column(name="create_date")
+    @JsonDeserialize(using= LocalDateTimeDeserializer.class)
+    @JsonSerialize(using= LocalDateTimeSerializer.class)
+    private LocalDateTime createdDate;
 
     @Column(name="is_modified")
     private Boolean isModified;

@@ -24,18 +24,17 @@ import java.time.LocalDateTime;
 @Entity @DiscriminatorValue("Announcement")
 @Getter @Table(name="announcement_board")
 @NoArgsConstructor
-public class AnnouncementBoard extends BoardDomain {
+public class Announcement extends BoardDomain {
 
-    public AnnouncementBoard(String authorName, String content, LocalDateTime createdDate,
-                             Member member, Store store, String title) {
-        super(member, store, title);
+    public Announcement(String authorName, String content, LocalDateTime createdDate,
+                        Member member, Store store, String title) {
+        super(member, store, title, createdDate);
         this.authorName = authorName;
         this.content = content;
-        this.createdDate = createdDate;
     }
 
-    public void updatePost(String title, String content) {
-        super.updatePost(title);
+    public void updatePost(String title, String content, LocalDateTime modifiedTime) {
+        super.updatePost(title, modifiedTime);
         this.content = content;
     }
 
@@ -47,11 +46,5 @@ public class AnnouncementBoard extends BoardDomain {
     private String authorName;
 
     private String content;
-
-    @Column(name="create_date")
-    @JsonDeserialize(using= LocalDateTimeDeserializer.class)
-    @JsonSerialize(using= LocalDateTimeSerializer.class)
-    private LocalDateTime createdDate;
-
 
 }
