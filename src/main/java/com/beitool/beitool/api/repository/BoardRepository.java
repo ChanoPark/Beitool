@@ -4,6 +4,7 @@ import com.beitool.beitool.domain.board.Announcement;
 import com.beitool.beitool.domain.board.BoardDomain;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
+import com.beitool.beitool.domain.board.Free;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +21,9 @@ import java.util.List;
  * 5.글쓴이 찾기
  * 6.게시글 조회(for dirty checking - 준영속 상태 엔티티)
  *    6-1.공지사항 조회
+ *    6-2.자유게시판 조회
  * @author Chanos
- * @since 2022-04-24
+ * @since 2022-04-29
  */
 @Repository
 @Transactional
@@ -70,8 +72,13 @@ public class BoardRepository<T extends BoardDomain> {
                 .setParameter("id", id)
                 .getSingleResult();
     }
+    /***--게시글 조회--***/
     /*공지사항 조회*/
     public Announcement findAnnouncementPost(Long id) {
         return em.find(Announcement.class, id);
+    }
+    /*자유게시판 조회*/
+    public Free findFreePost(Long id) {
+        return em.find(Free.class, id);
     }
 }

@@ -19,11 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
  * 1.게시판 접속
  * 2.게시글 작성
  *    2-1.공지사항 작성
+ *    2-2.자유게시판 작성
  * 3.게시글 조회
  *    3-1.공지시항 조회
+ *    3-2.자유게시판 조회
  * 4.게시글 삭제
  * 5.게시글 수정
  *    5-1.공지사항 수정
+ *    5-2.자유게시판 수정
  * @author Chanos
  * @since 2022-04-29
  */
@@ -48,7 +51,7 @@ public class BoardController {
     /***--게시글 작성--***/
     /*공지사항 작성*/
     @PostMapping("/board/announcement/create/post/")
-    public PostDetailResponseDto createPost(@RequestBody BoardRequestDto boardRequestDto) {
+    public PostDetailResponseDto createAnnouncementPost(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
 
@@ -60,6 +63,32 @@ public class BoardController {
             return new PostDetailResponseDto("Failed");
     }
 
+    /*자유게시판 작성*/
+    @PostMapping("/board/free/create/post")
+    public PostDetailResponseDto createFreePost(@RequestBody BoardRequestDto boardRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+
+        Belong belongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());
+
+        return boardServiceImpl.createFreePost(member, belongInfo, boardRequestDto);
+    }
+
+    /***--게시글 조회--***/
+    /*공지사항 조회*/
+    @PostMapping("/board/announcement/read/post/")
+    public PostDetailResponseDto readAnnouncementPost(@RequestBody BoardRequestDto boardRequestDto) {
+        Long postId = boardRequestDto.getId();
+        return boardServiceImpl.readAnnouncementPost(postId);
+    }
+
+    /*자유게시판 조회*/
+    @PostMapping("/board/free/read/post/")
+    public PostDetailResponseDto readFreePost(@RequestBody BoardRequestDto boardRequestDto) {
+        Long postId = boardRequestDto.getId();
+        return boardServiceImpl.readFreePost(postId);
+    }
+
     /***--게시글 삭제--***/
     @PostMapping("/board/delete/post/")
     public BoardResponseDto deletePost(@RequestBody BoardRequestDto boardRequestDto) {
@@ -69,17 +98,18 @@ public class BoardController {
     /***--게시글 수정--***/
     /*공지사항 수정*/
     @PostMapping("/board/announcement/update/post/")
-    public PostDetailResponseDto updatePost(@RequestBody BoardRequestDto boardRequestDto) {
+    public PostDetailResponseDto updateAnnouncementPost(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
         return boardServiceImpl.updateAnnouncementPost(member, boardRequestDto);
     }
 
-    /***--게시글 조회--***/
-    /*공지사항 조회*/
-    @PostMapping("/board/announcement/read/post/")
-    public PostDetailResponseDto readPost(@RequestBody BoardRequestDto boardRequestDto) {
-        Long id = boardRequestDto.getId();
-        return boardServiceImpl.readAnnouncementPost(id);
+    /*자유게시판 수정*/
+    @PostMapping("/board/free/update/post/")
+    public PostDetailResponseDto updateFreePost(@RequestBody BoardRequestDto boardRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        return boardServiceImpl.updateFreePost(member, boardRequestDto);
     }
+
 }

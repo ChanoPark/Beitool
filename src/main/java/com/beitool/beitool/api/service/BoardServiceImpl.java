@@ -7,6 +7,7 @@ import com.beitool.beitool.api.repository.BoardRepository;
 import com.beitool.beitool.domain.*;
 import com.beitool.beitool.domain.board.Announcement;
 import com.beitool.beitool.domain.board.BoardDomain;
+import com.beitool.beitool.domain.board.Free;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +21,14 @@ import java.util.List;
  * 1.게시글 목록 조회
  * 2.게시글 작성
  *    2-1.공지사항 작성
- * 3.게시글 삭제
- * 4.게시글 수정
- *    4-1.공지사항 수정
- * 5.게시글 조회
- *    5-1.공지사항 조회
+ *    2-2.자유게시판 작성
+ * 3.게시글 조회
+ *    3-1.공지시항 조회
+ *    3-2.자유게시판 조회
+ * 4.게시글 삭제
+ * 5.게시글 수정
+ *    5-1.공지사항 수정
+ *    5-2.자유게시판 수정
  * @author Chanos
  * @since 2022-04-29
  */
@@ -61,7 +65,49 @@ public class BoardServiceImpl {
         return new PostDetailResponseDto(title, content, postId, authorName, createdTime, "Success");
     }
 
-    /*게시글 삭제*/
+    /*자유게시판 작성*/
+    public PostDetailResponseDto createFreePost(Member member, Belong belongInfo, BoardRequestDto boardRequestDto) {
+        Store store = member.getActiveStore();
+        String authorName = belongInfo.getName();
+        String content = boardRequestDto.getContent();
+        String title = boardRequestDto.getTitle();
+        LocalDateTime createdTime = LocalDateTime.now();
+        Free free = new Free(authorName, content, createdTime, member, store, title);
+        Long postId = boardRepository.createPost(free);
+
+        return new PostDetailResponseDto(title, content, postId, authorName, createdTime, "Success");
+    }
+
+    /***--게시글 조회--***/
+    /*공지사항 게시글 조회*/
+    public PostDetailResponseDto readAnnouncementPost(Long postId) {
+        Announcement findPost = new Announcement();
+        try {
+            findPost = (Announcement) boardRepository.readPost(postId, findPost);
+            LocalDateTime createdTime = LocalDateTime.now();
+            return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
+                    postId, findPost.getAuthorName(), createdTime, "Success");
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new PostDetailResponseDto("Failed");
+        }
+    }
+
+    /*자유게시판 게시글 조회*/
+    public PostDetailResponseDto readFreePost(Long postId) {
+        Free findPost = new Free();
+        try {
+            findPost = (Free) boardRepository.readPost(postId, findPost);
+            LocalDateTime createdTime = LocalDateTime.now();
+            return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
+                    postId, findPost.getAuthorName(), createdTime, "Success");
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new PostDetailResponseDto("Failed");
+        }
+    }
+
+    /***--게시글 삭제--***/
     public BoardResponseDto deletePost(Long id, String boardType) {
         boardRepository.deletePost(id, boardType);
         return new BoardResponseDto("성공적으로 삭제되었습니다.");
@@ -80,7 +126,6 @@ public class BoardServiceImpl {
             Announcement findPost = boardRepository.findAnnouncementPost(postId);
 
             LocalDateTime modifiedTime = LocalDateTime.now();
-
             findPost.updatePost(boardRequestDto.getTitle(), boardRequestDto.getContent(), modifiedTime);
 
             return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
@@ -90,16 +135,21 @@ public class BoardServiceImpl {
         }
     }
 
-    /***--게시글 조회--***/
-    /*공지사항 게시글 조회*/
-    public PostDetailResponseDto readAnnouncementPost(Long postId) {
-        Announcement findPost = new Announcement();
-        try {
-            findPost = (Announcement) boardRepository.readPost(postId, findPost);
-            LocalDateTime createdTime = LocalDateTime.now();
+    /*자유게시판 수정*/
+    @Transactional
+    public PostDetailResponseDto updateFreePost(Member member, BoardRequestDto boardRequestDto) {
+        Member author = boardRepository.findAuthor(boardRequestDto.getId());
+
+        if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
+            Long postId = boardRequestDto.getId();
+            Free findPost = boardRepository.findFreePost(postId);
+
+            LocalDateTime modifiedTime = LocalDateTime.now();
+            findPost.updatePost(boardRequestDto.getTitle(), boardRequestDto.getContent(), modifiedTime);
+
             return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
-                    postId, findPost.getAuthorName(), createdTime, "Success");
-        } catch (NoResultException e) {
+                    postId, findPost.getAuthorName(), modifiedTime, "Success");
+        } else {
             return new PostDetailResponseDto("Failed");
         }
     }

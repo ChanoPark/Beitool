@@ -190,7 +190,7 @@ public class StoreService {
         for (Belong belong : belongs) {
             String belongStoreName = belong.getStore().getName(); //소속된 사업장 이름
             //취합된 소속된 사업장 정보를 BelongedStore 클래스에 모아서 객체 생성
-            BelongedStore belongedStore = new BelongedStore(belong.getName(), belong.getStore(), belongStoreName, belong.getPosition());
+            BelongedStore belongedStore = new BelongedStore(belong.getName(), belong.getStore().getId(), belongStoreName, belong.getPosition());
             //HashMap에 소속된 사업장 정보 저장
             getBelongStoreInfoResponse.setBelongedStore(belongedStore);
         }
