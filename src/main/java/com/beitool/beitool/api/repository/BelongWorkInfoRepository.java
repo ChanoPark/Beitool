@@ -7,6 +7,7 @@ import com.beitool.beitool.domain.WorkInfo;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,7 +48,7 @@ public class BelongWorkInfoRepository {
     }
 
     /*소속정보 조회*/
-    public Belong findBelongInfo(Member member, Store store) {
+    public Belong findBelongInfo(Member member, Store store) throws NoResultException {
         return em.createQuery("select b from Belong b where b.member = :member and b.store = :store", Belong.class)
                 .setParameter("member", member)
                 .setParameter("store", store)

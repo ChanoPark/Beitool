@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import java.util.List;
  * 각종 게시판과 관련된 서비스를 제공하기 위해 DB와 상호작용하는 Repository
  * 1.게시글 목록 조회
  * 2.게시글 조회
+ *    2-1.게시글 조회
+ *    2-2.ToDoList 조회 (제목과 게시글이 분리되어 있지 않기 때문에)
  * 3.게시글 작성
  * 4.게시글 삭제
  * 5.글쓴이 찾기
@@ -42,13 +45,22 @@ public class BoardRepository<T extends BoardDomain> {
         return findPosts;
     }
 
+    /***--게시글 조회--***/
     /*게시글 조회*/
-    public Object readPost(Long id, Object board) {
+    public Object readPost(Long id, Object board) throws NoResultException {
         return em.createQuery("select b from BoardDomain b " +
                         "where type(b) IN (:board) and b.id = :id")
                 .setParameter("board", board.getClass())
                 .setParameter("id", id)
                 .getSingleResult();
+    }
+
+    /*ToDoList 조회*/
+    public List<BoardDomain> readToDoListPost(Store store, Object board) {
+        return em.createQuery("select b from BoardDomain b where type(b) IN (:board) and b.store = :store")
+                .setParameter("board", board.getClass())
+                .setParameter("store", store)
+                .getResultList();
     }
 
     /*게시글 작성*/
@@ -59,7 +71,7 @@ public class BoardRepository<T extends BoardDomain> {
     }
 
     /*게시글 삭제*/
-    public void deletePost(Long id, String boardType) {
+    public void deletePost(Long id, String boardType) throws NoResultException {
         em.createQuery("delete from BoardDomain b where b.dtype = :boardType and b.id=:id")
                 .setParameter("boardType", boardType)
                 .setParameter("id", id)

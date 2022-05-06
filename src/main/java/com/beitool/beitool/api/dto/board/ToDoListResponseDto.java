@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,9 +20,20 @@ import java.util.List;
  */
 @Data
 public class ToDoListResponseDto {
+    public ToDoListResponseDto() { this.posts = new ArrayList<>(); }
+    public ToDoListResponseDto(String message) {
+        this.message = message;
+    }
     List<PostInfo> posts;
+    private String message;
 
-    public class PostInfo{
+    public void addPost(Long id, String title, String content, String employeeName, boolean isClear, LocalDate jobDate) {
+        PostInfo newPost = new PostInfo(id, title, content, employeeName, isClear, jobDate);
+        posts.add(newPost);
+    }
+
+    @Data @AllArgsConstructor
+    public class PostInfo {
         private Long id;
         private String title;
         private String content;
