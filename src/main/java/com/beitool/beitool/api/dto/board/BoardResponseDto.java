@@ -26,24 +26,9 @@ public class BoardResponseDto {
     }
 
     private String message; //결과를 알려주기 위한 message
-
-    //게시글 수정된 결과, 조회된 게시글
-    private String title;
-    private String content;
-    @JsonDeserialize(using= LocalDateTimeDeserializer.class)
-    @JsonSerialize(using= LocalDateTimeSerializer.class)
-    private LocalDateTime createdTime;
-
-    //게시판에서 조회된 게시글
     private List<BoardDomain> posts; // 제목, 게시글
-
-    //게시글에서 조회된 게시글들 작성된 시간
-    @JsonDeserialize(using= LocalDateTimeDeserializer.class)
-    @JsonSerialize(using= LocalDateTimeSerializer.class)
-    private List<LocalDateTime> createdTimes;
 
     public void setPosts(BoardDomain post) {
         this.posts.add(post);
     }
-
 }
