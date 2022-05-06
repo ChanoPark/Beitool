@@ -28,6 +28,7 @@ public class Belong {
         this.belongDate = currentTime;
         this.position = position;
         this.name = name;
+        this.salaryHour = 9160;
     }
 
     @Id @ManyToOne(fetch=FetchType.LAZY)
@@ -51,7 +52,7 @@ public class Belong {
     private LocalDate belongDate; //가입 날짜
 
     @Column(name="salary_hour")
-    private int salaryHour; //시급
+    private Integer salaryHour; //시급
 
     public void setPosition(MemberPosition position) {
         this.position = position;
