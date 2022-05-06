@@ -1,10 +1,14 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.store.*;
+import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
+import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
+import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -27,6 +31,7 @@ import java.util.Map;
  * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
  * 4.메인 화면(사업장 이름 반환, 나중에 일정도 반환할 것으로 예상)
  * 5.사업장 변경(소속되어 있는 사업장 정보 반환)
+ * 6.소속되어 있는 직원 목록 반환
  * 예상되는 기능: 사업장 정보 수정 등
  * Implemented by Chanos
  */
@@ -36,6 +41,8 @@ public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
+    private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final StoreRepository storeRepository;
 
     /*사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
@@ -101,7 +108,9 @@ public class StoreApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
-        return new GetActiveStoreInfo(member.getActiveStore().getName());
+        MemberPosition position = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
+
+        return new GetActiveStoreInfo(member.getActiveStore().getName(), position);
     }
 
     /*사업장 변경(소속되어 있는 사업장 정보 반환)*/
@@ -112,6 +121,12 @@ public class StoreApiController {
         Member member = memberRepository.findOne(memberId);
 
         return storeService.getBelongStoreInfo(member);
+    }
+
+    /*소속되어 있는 직원 목록 반환*/
+    @PostMapping("/store/belong/employee/")
+    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestBody Map<String, Long> params) {
+        return storeService.getBelongEmployeeList(params.get("storeId"));
     }
 
     /*-----DTO-----*/
@@ -160,5 +175,6 @@ public class StoreApiController {
     @Data @AllArgsConstructor
     static class GetActiveStoreInfo {
         private String storeName;
+        private MemberPosition position;
     }
 }
