@@ -33,8 +33,15 @@ public class ToDoList extends BoardDomain{
         this.employee = employee;
         this.isClear = false;
     }
+    /*게시글 수정*/
+    public void updatePost(String title, String content, Member employee, LocalDateTime modifiedTime, LocalDate jobDate) {
+        super.updatePost(title, modifiedTime);
+        this.content = content;
+        this.jobDate = jobDate;
+        this.employee = employee;
+    }
 
-    //업무완료 표시를 위한 메소드
+    /*업무완료 표시를 위한 메소드*/
     public void clearJob() {
         this.isClear = !this.isClear;
     }

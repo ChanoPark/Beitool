@@ -1,9 +1,6 @@
 package com.beitool.beitool.api.repository;
 
-import com.beitool.beitool.domain.Belong;
-import com.beitool.beitool.domain.Member;
-import com.beitool.beitool.domain.Store;
-import com.beitool.beitool.domain.WorkInfo;
+import com.beitool.beitool.domain.*;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -21,7 +18,7 @@ import java.util.List;
  * 5.회원이 가입되어 있는 모든 소속정보 조회
  * 6.근로 정보 조회(지도 들어갔을 때 출근상태인지 확인)
  * 7.근로 정보 수정(퇴근)
- *
+ * 8.소속되어 있는 직원 목록 조회
  * Implemented by Chanos
  */
 @Repository
@@ -83,5 +80,13 @@ public class BelongWorkInfoRepository {
                 .setParameter("member", member)
                 .setParameter("store", store)
                 .executeUpdate();
+    }
+
+    /*소속되어 있는 직원 목록 조회*/
+    public List<Belong> getBelongEmployeeList(Store store) {
+        return em.createQuery("select b from Belong b where b.store=:store and b.position=:position")
+                .setParameter("store", store)
+                .setParameter("position", MemberPosition.Employee)
+                .getResultList();
     }
 }

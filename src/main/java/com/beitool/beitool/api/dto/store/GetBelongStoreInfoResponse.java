@@ -21,8 +21,6 @@ public class GetBelongStoreInfoResponse {
     }
 
     public void setBelongedStore(BelongedStore belongedStore) {
-        List<BelongedStore> belongedStoreList = new ArrayList<>();
-        belongedStoreList.add(belongedStore);
         this.belongedStore.add(belongedStore);
     }
 }

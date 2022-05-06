@@ -30,6 +30,7 @@ import java.util.Map;
  * 5.게시글 수정
  *    5-1.공지사항 수정
  *    5-2.자유게시판 수정
+ *    5-3.ToDoList 수정
  * 6.기타
  *    6-1.ToDoList 업무 완료 표시
  * @author Chanos
@@ -139,6 +140,15 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
         return boardServiceImpl.updateFreePost(member, boardRequestDto);
+    }
+
+    /*ToDoList 수정*/
+    @PostMapping("/board/todo/post/update/")
+    public ToDoListResponseDto updateToDoListPost(@RequestBody ToDoListRequestDto toDoListRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(toDoListRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+
+        return boardServiceImpl.updateToDoListPost(member, toDoListRequestDto);
     }
 
     /*ToDoList 업무 완료 표시*/

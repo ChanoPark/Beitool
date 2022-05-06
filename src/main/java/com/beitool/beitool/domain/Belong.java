@@ -1,5 +1,6 @@
 package com.beitool.beitool.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -32,10 +33,12 @@ public class Belong {
     }
 
     @Id @ManyToOne(fetch=FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name="member_id")
     private Member member; //회원과 소속은 다대일관계(회원은 여러 사업장에 소속될 수 있음)
 
     @Id @ManyToOne(fetch=FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name="store_id")
     private Store store; //가게와 소속은 다대일관계(가게는 여러 회원을 가질 수 있음)
 

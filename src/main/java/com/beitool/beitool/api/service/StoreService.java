@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.service;
 
+import com.beitool.beitool.api.dto.store.BelongEmployeeListResponseDto;
 import com.beitool.beitool.api.dto.store.BelongedStore;
 import com.beitool.beitool.api.dto.store.GetBelongStoreInfoResponse;
 import com.beitool.beitool.api.dto.store.StoreAddressResponseDto;
@@ -39,7 +40,7 @@ import java.util.Map;
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
  * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
  * 7.사업장 변경(소속되어 있는 사업장 정보 반환)
- *
+ * 8.소속되어 있는 직원 목록 반환
  * Implemented by Chanos
  */
 @Service
@@ -196,5 +197,20 @@ public class StoreService {
         }
         System.out.println("***사업장 정보 반환 완료");
         return getBelongStoreInfoResponse;
+    }
+
+    /*소속되어 있는 직원 목록 반환*/
+    public BelongEmployeeListResponseDto getBelongEmployeeList(Long storeId) {
+        Store store = storeRepository.findOne(storeId);
+        List<Belong> belongEmployeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
+
+        BelongEmployeeListResponseDto employeeListResponseDto = new BelongEmployeeListResponseDto();
+        for (Belong employee : belongEmployeeList) {
+            Long employeeId = employee.getMember().getId();
+            String employeeName = employee.getName();
+            employeeListResponseDto.setEmployee(employeeId, employeeName);
+        }
+        employeeListResponseDto.setMessage("Success");
+        return employeeListResponseDto;
     }
 }

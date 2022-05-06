@@ -34,6 +34,7 @@ import java.util.List;
  * 5.게시글 수정
  *    5-1.공지사항 수정
  *    5-2.자유게시판 수정
+ *    5-3.ToDoList 수정
  * 6.기타
  *    6-1.ToDoList 업무 완료 표시
  * @author Chanos
@@ -57,7 +58,7 @@ public class BoardServiceImpl {
         for (BoardDomain post : posts) {
             boardResponseDto.setPosts(post);
         }
-
+        boardResponseDto.setMessage("Success");
         return boardResponseDto;
     }
 
@@ -164,7 +165,7 @@ public class BoardServiceImpl {
     public BoardResponseDto deletePost(Long id, String boardType) {
         try {
             boardRepository.deletePost(id, boardType);
-            return new BoardResponseDto("성공적으로 삭제되었습니다.");
+            return new BoardResponseDto("Success");
         } catch (NoResultException e) {
             return new BoardResponseDto("Failed");
         }
@@ -180,9 +181,9 @@ public class BoardServiceImpl {
 
         if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
             Long postId = boardRequestDto.getId();
-            Announcement findPost = boardRepository.findAnnouncementPost(postId);
-
             LocalDateTime modifiedTime = LocalDateTime.now();
+
+            Announcement findPost = boardRepository.findAnnouncementPost(postId);
             findPost.updatePost(boardRequestDto.getTitle(), boardRequestDto.getContent(), modifiedTime);
 
             return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
@@ -199,15 +200,37 @@ public class BoardServiceImpl {
 
         if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
             Long postId = boardRequestDto.getId();
-            Free findPost = boardRepository.findFreePost(postId);
-
             LocalDateTime modifiedTime = LocalDateTime.now();
+
+            Free findPost = boardRepository.findFreePost(postId);
             findPost.updatePost(boardRequestDto.getTitle(), boardRequestDto.getContent(), modifiedTime);
 
             return new PostDetailResponseDto(findPost.getTitle(), findPost.getContent(),
                     postId, findPost.getAuthorName(), modifiedTime, "Success");
         } else {
             return new PostDetailResponseDto("Failed");
+        }
+    }
+
+    /*ToDoList 수정*/
+    @Transactional
+    public ToDoListResponseDto updateToDoListPost(Member member, ToDoListRequestDto toDoListRequestDto) {
+        Member author = boardRepository.findAuthor(toDoListRequestDto.getId());
+
+        if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
+            Long postId = toDoListRequestDto.getId();
+            Store store = author.getActiveStore();
+            Member employee = memberRepository.findOne(toDoListRequestDto.getEmployee());
+
+            LocalDate jobDate = toDoListRequestDto.getJobDate();
+            LocalDateTime modifiedTime = LocalDateTime.now();
+
+            ToDoList findPost = boardRepository.findToDoListPost(postId);
+            findPost.updatePost(toDoListRequestDto.getTitle(), toDoListRequestDto.getContent(), employee, modifiedTime, jobDate);
+
+            return readToDoList(store);
+        } else {
+            return new ToDoListResponseDto("Failed");
         }
     }
 
