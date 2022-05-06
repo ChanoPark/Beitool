@@ -34,6 +34,8 @@ import java.util.List;
  * 5.게시글 수정
  *    5-1.공지사항 수정
  *    5-2.자유게시판 수정
+ * 6.기타
+ *    6-1.ToDoList 업무 완료 표시
  * @author Chanos
  * @since 2022-05-01
  */
@@ -206,6 +208,19 @@ public class BoardServiceImpl {
                     postId, findPost.getAuthorName(), modifiedTime, "Success");
         } else {
             return new PostDetailResponseDto("Failed");
+        }
+    }
+
+    /*ToDoList 업무 완료 표시*/
+    @Transactional
+    public PostDetailResponseDto clearJob(Long id) {
+        ToDoList findPost = boardRepository.findToDoListPost(id);
+
+        if(findPost == null) {
+            return new PostDetailResponseDto("Failed");
+        } else {
+            findPost.clearJob();
+            return new PostDetailResponseDto("Success");
         }
     }
 }

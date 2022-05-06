@@ -5,6 +5,7 @@ import com.beitool.beitool.domain.board.BoardDomain;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
 import com.beitool.beitool.domain.board.Free;
+import com.beitool.beitool.domain.board.ToDoList;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.List;
  * 6.게시글 조회(for dirty checking - 준영속 상태 엔티티)
  *    6-1.공지사항 조회
  *    6-2.자유게시판 조회
+ *    6-3.ToDoList 조회
  * @author Chanos
  * @since 2022-04-29
  */
@@ -93,4 +95,6 @@ public class BoardRepository<T extends BoardDomain> {
     public Free findFreePost(Long id) {
         return em.find(Free.class, id);
     }
+    /*ToDoList 조회*/
+    public ToDoList findToDoListPost(Long id) {return em.find(ToDoList.class, id);}
 }

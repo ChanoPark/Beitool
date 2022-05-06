@@ -34,6 +34,11 @@ public class ToDoList extends BoardDomain{
         this.isClear = false;
     }
 
+    //업무완료 표시를 위한 메소드
+    public void clearJob() {
+        this.isClear = !this.isClear;
+    }
+
     @Id
     @GeneratedValue
     @Column(name="announce_post_id")

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 
 /**
  * 게시판을 사용하기 위한 컨트롤러
@@ -29,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
  * 5.게시글 수정
  *    5-1.공지사항 수정
  *    5-2.자유게시판 수정
+ * 6.기타
+ *    6-1.ToDoList 업무 완료 표시
  * @author Chanos
  * @since 2022-05-06
  */
@@ -37,7 +40,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class BoardController {
     private final BoardServiceImpl boardServiceImpl;
     private final MemberRepository memberRepository;
-    private final StoreRepository storeRepository;
     private final MemberKakaoApiService memberKakaoApiService;
     private final BelongWorkInfoRepository belongWorkInfoRepository;
 
@@ -139,4 +141,9 @@ public class BoardController {
         return boardServiceImpl.updateFreePost(member, boardRequestDto);
     }
 
+    /*ToDoList 업무 완료 표시*/
+    @PostMapping("/board/todo/clear/")
+    public PostDetailResponseDto clearJob(@RequestBody Map<String, Long> params) {
+        return boardServiceImpl.clearJob(params.get("id"));
+    }
 }
