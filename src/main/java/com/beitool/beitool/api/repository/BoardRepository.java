@@ -17,16 +17,17 @@ import java.util.List;
 /**
  * 각종 게시판과 관련된 서비스를 제공하기 위해 DB와 상호작용하는 Repository
  * 1.게시글 목록 조회
- * 2.게시글 조회
- *    2-1.게시글 조회
- *    2-2.ToDoList 조회 (제목과 게시글이 분리되어 있지 않기 때문에)
- * 3.게시글 작성
- * 4.게시글 삭제
- * 5.글쓴이 찾기
- * 6.게시글 조회(for dirty checking - 준영속 상태 엔티티)
- *    6-1.공지사항 조회
- *    6-2.자유게시판 조회
- *    6-3.ToDoList 조회
+ * 2.전체 게시글 개수 조회(페이징)
+ * 3.게시글 조회
+ *    3-1.게시글 조회
+ *    3-2.ToDoList 조회 (제목과 게시글이 분리되어 있지 않기 때문에)
+ * 4.게시글 작성
+ * 5.게시글 삭제
+ * 6.글쓴이 찾기
+ * 7.게시글 조회(for dirty checking - 준영속 상태 엔티티)
+ *    7-1.공지사항 조회
+ *    7-2.자유게시판 조회
+ *    7-3.ToDoList 조회
  * @author Chanos
  * @since 2022-04-29
  */
@@ -38,14 +39,26 @@ public class BoardRepository<T extends BoardDomain> {
     private EntityManager em;
 
     /*게시글 목록 조회*/
-    public List<BoardDomain> readBoard(Store store, String boardType) {
+    public List<BoardDomain> readBoard(Store store, String boardType, Integer page) {
         List<BoardDomain> findPosts = em.createQuery("select b from BoardDomain b" +
                 " where b.store = :store and b.dtype = :boardType", BoardDomain.class)
                 .setParameter("store", store)
                 .setParameter("boardType", boardType)
+                .setFirstResult(page*10)
+                .setMaxResults(10)
                 .getResultList();
         return findPosts;
     }
+
+    /*전체 게시글 개수 조회(페이징)*/
+    public Long countPost(Store store, String boardType) {
+        return (Long) em.createQuery("select count(b) from BoardDomain b " +
+                        "where b.store = :store and b.dtype = :boardType")
+                .setParameter("store", store)
+                .setParameter("boardType", boardType)
+                .getSingleResult();
+    }
+
 
     /***--게시글 조회--***/
     /*게시글 조회*/
