@@ -122,7 +122,9 @@ public class BoardController {
     /***--게시글 삭제--***/
     @PostMapping("/board/post/delete/")
     public BoardResponseDto deletePost(@RequestBody BoardRequestDto boardRequestDto) {
-        return boardServiceImpl.deletePost(boardRequestDto.getId(), boardRequestDto.getBoardType());
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        return boardServiceImpl.deletePost(member, boardRequestDto.getId(), boardRequestDto.getBoardType());
     }
 
     /***--게시글 수정--***/

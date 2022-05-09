@@ -162,11 +162,17 @@ public class BoardServiceImpl {
     }
 
     /***--게시글 삭제--***/
-    public BoardResponseDto deletePost(Long id, String boardType) {
-        try {
-            boardRepository.deletePost(id, boardType);
-            return new BoardResponseDto("Success");
-        } catch (NoResultException e) {
+    public BoardResponseDto deletePost(Member member, Long id, String boardType) {
+        Member author = boardRepository.findAuthor(id);
+        if (author.equals(member)) {
+            //본인만 삭제할 수 있음
+            try {
+                boardRepository.deletePost(id, boardType);
+                return new BoardResponseDto("Success");
+            } catch (NoResultException e) {
+                return new BoardResponseDto("Failed");
+            }
+        } else {
             return new BoardResponseDto("Failed");
         }
         //*******없는거 삭제해도 성공적으로 삭제되었다고 뜸
