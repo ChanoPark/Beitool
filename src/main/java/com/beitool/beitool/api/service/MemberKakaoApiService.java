@@ -123,7 +123,7 @@ public class MemberKakaoApiService {
     }
 
     /*리프레시 토큰을 사용해서 엑세스토큰 갱신*/
-    public AuthorizationKakaoDto updateAccessToken(AuthorizationKakaoDto token, Member member, String refreshToken) {
+    public AuthorizationKakaoDto updateAccessToken(AuthorizationKakaoDto token, Member member, String refreshToken) throws HttpClientErrorException {
         String appKey = "64ebcc55e9ce025378904a725743ba67"; // 카카오 REST API Key 값
 
         //헤더

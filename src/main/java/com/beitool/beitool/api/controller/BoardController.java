@@ -51,8 +51,9 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
         String boardType = boardRequestDto.getBoardType();
+        Integer page = boardRequestDto.getPage();
 
-        return boardServiceImpl.readBoard(member, boardType);
+        return boardServiceImpl.readBoard(member, boardType, page);
     }
 
     /*ToDoList 목록 조회*/

@@ -48,16 +48,20 @@ public class BoardServiceImpl {
     private final BelongWorkInfoRepository belongWorkInfoRepository;
 
     /***--게시글 목록 조회--***/
-    /*부모 클래스인 BoardDoamin 조회*/
-    public BoardResponseDto readBoard(Member member, String boardType) {
+    /*부모 클래스인 BoardDomain 조회*/
+    public BoardResponseDto readBoard(Member member, String boardType, Integer page) {
         Store store = member.getActiveStore();
 
         BoardResponseDto boardResponseDto = new BoardResponseDto();
-        List<BoardDomain> posts = boardRepository.readBoard(store, boardType); //BoardDomain List가 날라옴.
+        List<BoardDomain> posts = boardRepository.readBoard(store, boardType, page); //BoardDomain List가 날라옴.
 
         for (BoardDomain post : posts) {
             boardResponseDto.setPosts(post);
         }
+
+        Long countPost = boardRepository.countPost(store, boardType); //게시글 개수
+        Long totalPage = countPost/10 +1; //1페이지부터 하기 위함
+        boardResponseDto.setTotalPage(totalPage);
         boardResponseDto.setMessage("Success");
         return boardResponseDto;
     }
