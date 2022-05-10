@@ -41,11 +41,11 @@ public class BoardRepository<T extends BoardDomain> {
     /*게시글 목록 조회*/
     public List<BoardDomain> readBoard(Store store, String boardType, Integer page) {
         List<BoardDomain> findPosts = em.createQuery("select b from BoardDomain b" +
-                " where b.store = :store and b.dtype = :boardType", BoardDomain.class)
+                " where b.store = :store and b.dtype = :boardType order by b.id DESC", BoardDomain.class)
                 .setParameter("store", store)
                 .setParameter("boardType", boardType)
-                .setFirstResult(page*10)
-                .setMaxResults(10)
+                .setFirstResult(page*20)
+                .setMaxResults(20)
                 .getResultList();
         return findPosts;
     }
@@ -71,10 +71,12 @@ public class BoardRepository<T extends BoardDomain> {
     }
 
     /*ToDoList 조회*/
-    public List<BoardDomain> readToDoListPost(Store store, Object board) {
+    public List<BoardDomain> readToDoListPost(Store store, Object board, Integer page) {
         return em.createQuery("select b from BoardDomain b where type(b) IN (:board) and b.store = :store")
                 .setParameter("board", board.getClass())
                 .setParameter("store", store)
+                .setFirstResult(page*20)
+                .setMaxResults(20)
                 .getResultList();
     }
 

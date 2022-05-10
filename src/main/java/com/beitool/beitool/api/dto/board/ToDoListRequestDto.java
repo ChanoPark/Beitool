@@ -21,6 +21,7 @@ public class ToDoListRequestDto {
 
     private String title;
     private String content;
+    private Integer page;
 
     @JsonDeserialize(using= LocalDateDeserializer.class)
     @JsonSerialize(using= LocalDateSerializer.class)

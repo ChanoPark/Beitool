@@ -3,7 +3,6 @@ package com.beitool.beitool.api.controller;
 import com.beitool.beitool.api.dto.board.*;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
-import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.api.service.BoardServiceImpl;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.domain.*;
@@ -23,6 +22,7 @@ import java.util.Map;
  *    2-1.공지사항 작성
  *    2-2.자유게시판 작성
  *    2-3.ToDoList 작성
+ *    2-4.재고관리 작성
  * 3.게시글 조회
  *    3-1.공지시항 조회
  *    3-2.자유게시판 조회
@@ -51,7 +51,7 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
         String boardType = boardRequestDto.getBoardType();
-        Integer page = boardRequestDto.getPage();
+        Integer page = boardRequestDto.getPage()-1; // 0~9, 10~19 와 같이 게시글을 표현해서 0부터 시작해야됌.
 
         return boardServiceImpl.readBoard(member, boardType, page);
     }
@@ -61,8 +61,8 @@ public class BoardController {
     public ToDoListResponseDto readToDoListBoard(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
-
-        return boardServiceImpl.readToDoList(member.getActiveStore());
+        Integer page = boardRequestDto.getPage();
+        return boardServiceImpl.readToDoList(member.getActiveStore(), page);
     }
 
     /***--게시글 작성--***/
@@ -97,13 +97,18 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(toDoListRequestDto.getAccessToken());
         Member author = memberRepository.findOne(memberId);
         Belong belongInfo = belongWorkInfoRepository.findBelongInfo(author, author.getActiveStore());
-
         //사장만 업무를 지시할 수 있다.
         if (belongInfo.getPosition().equals(MemberPosition.President))
-            return boardServiceImpl.createToDoList(author,belongInfo, toDoListRequestDto);
+            return boardServiceImpl.createToDoList(author, belongInfo, toDoListRequestDto);
         else
             return new ToDoListResponseDto("Failed");
     }
+
+    /*재고관리 작성*/
+//    @PostMapping("/board/stock/create/post/")
+//    public UploadResult createStockPost(@RequestParam("userKey") String userKey, @RequestParam("imageFile")MultipartFile multipartFile) {
+//        ImageFile
+//    }
 
     /***--게시글 조회--***/
     /*공지사항 조회*/
