@@ -36,14 +36,14 @@ public abstract class BoardDomain {
         this.member = member;
         this.store = store;
         this.title = title;
-        this.createdDate = createdDate;
+        this.createdTime = createdDate;
         this.isModified = false;
     }
 
     //제목 수정
     public void updatePost(String title, LocalDateTime modifiedTime) {
         this.title = title;
-        this.createdDate = modifiedTime;
+        this.createdTime = modifiedTime;
         this.isModified = true;
     }
     @Id @GeneratedValue
@@ -65,7 +65,7 @@ public abstract class BoardDomain {
     @Column(name="create_date")
     @JsonDeserialize(using= LocalDateTimeDeserializer.class)
     @JsonSerialize(using= LocalDateTimeSerializer.class)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdTime;
 
     @Column(name="is_modified")
     private Boolean isModified;

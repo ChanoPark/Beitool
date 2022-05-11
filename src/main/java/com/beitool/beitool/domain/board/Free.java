@@ -32,7 +32,7 @@ public class Free extends BoardDomain{
 
     @Id
     @GeneratedValue
-    @Column(name="announce_post_id")
+    @Column(name="free_post_id")
     private Long id;
 
     @Column(name="author_name")

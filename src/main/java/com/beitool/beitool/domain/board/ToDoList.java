@@ -39,6 +39,7 @@ public class ToDoList extends BoardDomain{
         this.content = content;
         this.jobDate = jobDate;
         this.employee = employee;
+        this.isClear = false;
     }
 
     /*업무완료 표시를 위한 메소드*/
@@ -48,7 +49,7 @@ public class ToDoList extends BoardDomain{
 
     @Id
     @GeneratedValue
-    @Column(name="announce_post_id")
+    @Column(name="todo_post_id")
     private Long id;
 
     @Column(name="author_name")
