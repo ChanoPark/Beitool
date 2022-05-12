@@ -5,10 +5,7 @@ import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.BoardRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.*;
-import com.beitool.beitool.domain.board.Announcement;
-import com.beitool.beitool.domain.board.BoardDomain;
-import com.beitool.beitool.domain.board.Free;
-import com.beitool.beitool.domain.board.ToDoList;
+import com.beitool.beitool.domain.board.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +24,7 @@ import java.util.List;
  *    2-1.공지사항 작성
  *    2-2.자유게시판 작성
  *    2-3.ToDoList 작성
+ *    2-4.재고관리 작성
  * 3.게시글 조회
  *    3-1.공지시항 조회
  *    3-2.자유게시판 조회
@@ -61,16 +59,16 @@ public class BoardServiceImpl {
 
         Long countPost = boardRepository.countPost(store, boardType); //게시글 개수
         Long totalPage = countPost/10 +1; //1페이지부터 하기 위함
-        boardResponseDto.setTotalPage(totalPage);
+        boardResponseDto.changePageToArray(totalPage);
         boardResponseDto.setMessage("Success");
         return boardResponseDto;
     }
 
     /*ToDoList 게시글 조회*/
-    public ToDoListResponseDto readToDoList(Store store) {
+    public ToDoListResponseDto readToDoList(Store store, Integer page) {
         ToDoListResponseDto toDoListResponseDto = new ToDoListResponseDto();
         ToDoList toDoList = new ToDoList();
-        List<ToDoList> toDoLists = boardRepository.readToDoListPost(store, toDoList);
+        List<ToDoList> toDoLists = boardRepository.readToDoListPost(store, toDoList, page);
         try {
             for (ToDoList findPost : toDoLists) {
                 Long id = findPost.getId();
@@ -119,7 +117,7 @@ public class BoardServiceImpl {
     }
 
     /*ToDoList 작성*/
-    public ToDoListResponseDto createToDoList(Member author, Belong belongInfo, ToDoListRequestDto toDoListRequestDto) {
+    public ToDoListResponseDto createToDoPost(Member author, Belong belongInfo, ToDoListRequestDto toDoListRequestDto) {
         Store store = author.getActiveStore();
         String authorName = belongInfo.getName();
         String content = toDoListRequestDto.getContent();
@@ -127,6 +125,8 @@ public class BoardServiceImpl {
         LocalDateTime createdTime = LocalDateTime.now(); //업무 지시 시간
         LocalDate jobDate = toDoListRequestDto.getJobDate(); // 업무 기한
         Member employee = memberRepository.findOne(toDoListRequestDto.getEmployee()); //지시 대상 조회
+        Integer page = toDoListRequestDto.getPage()-1; //페이지
+
         //조회된 직원이 없으면 실패 반환
         if (employee == null)
             return new ToDoListResponseDto("Failed");
@@ -134,9 +134,26 @@ public class BoardServiceImpl {
         ToDoList toDoList = new ToDoList(authorName, content, createdTime, author, store, title, jobDate, employee);
 
         boardRepository.createPost(toDoList);
-        return readToDoList(store);
+        return readToDoList(store, page);
     }
 
+    /*재고관리 작성*/
+    public void createStockPost(StockRequestDto stockRequestDto, Member member) {
+        //일단 게시글부터 업로드하는걸로
+        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName();
+        String productName = stockRequestDto.getProductName();
+        Integer quantity = stockRequestDto.getQuantity();
+        String description = stockRequestDto.getDescription();
+        LocalDateTime expirationTime = stockRequestDto.getExpirationTime();
+        LocalDateTime modifyTime = stockRequestDto.getModifyTime();
+        LocalDateTime createdDate = LocalDateTime.now();
+
+        Stock stock = new Stock(authorName, createdDate, member, member.getActiveStore(), description,
+                productName, quantity, expirationTime, modifyTime);
+
+
+
+    }
 
     /***--게시글 조회--***/
     /*공지사항 게시글 조회*/
@@ -230,6 +247,7 @@ public class BoardServiceImpl {
         if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
             Long postId = toDoListRequestDto.getId();
             Store store = author.getActiveStore();
+            Integer page = toDoListRequestDto.getPage()-1;
             Member employee = memberRepository.findOne(toDoListRequestDto.getEmployee());
 
             LocalDate jobDate = toDoListRequestDto.getJobDate();
@@ -238,7 +256,7 @@ public class BoardServiceImpl {
             ToDoList findPost = boardRepository.findToDoListPost(postId);
             findPost.updatePost(toDoListRequestDto.getTitle(), toDoListRequestDto.getContent(), employee, modifiedTime, jobDate);
 
-            return readToDoList(store);
+            return readToDoList(store, page);
         } else {
             return new ToDoListResponseDto("Failed");
         }

@@ -3,7 +3,7 @@ package com.beitool.beitool.api.dto.board;
 import lombok.Data;
 
 /**
- * 게시판을 사용하기 위한 RequestDTO
+ * 공지사항, 자유게시판을 사용하기 위한 RequestDTO
  * @author Chanos
  * @since 2022-05-09
  */

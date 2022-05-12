@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Vector;
 
 /**
- * 게시판을 사용하기 위한 ResponseDto
+ * 공지사항, 자유게시판을 사용하기 위한 ResponseDto
  * @author Chanos
  * @since 2022-05-09
  */

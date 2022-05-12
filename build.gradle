@@ -36,6 +36,9 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+	//MultipartFile <-> File 변환을 위해 필요한 dependency
+	compileOnly group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
+	compileOnly group: 'commons-io', name: 'commons-io', version: '2.4'
 
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

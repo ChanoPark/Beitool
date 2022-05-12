@@ -24,7 +24,7 @@ public class ToDoListResponseDto {
     public ToDoListResponseDto(String message) {
         this.message = message;
     }
-    List<PostInfo> posts;
+    private List<PostInfo> posts;
     private String message;
 
     public void addPost(Long id, String title, String content, String employeeName, boolean isClear, LocalDate jobDate) {
