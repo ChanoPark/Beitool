@@ -125,8 +125,10 @@ public class StoreApiController {
 
     /*소속되어 있는 직원 목록 반환*/
     @PostMapping("/store/belong/employee/")
-    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestBody Map<String, Long> params) {
-        return storeService.getBelongEmployeeList(params.get("storeId"));
+    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestBody Map<String, String> params) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(params.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+        return storeService.getBelongEmployeeList(member.getActiveStore().getId());
     }
 
     /*-----DTO-----*/

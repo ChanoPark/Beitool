@@ -36,6 +36,7 @@ out/
 ### VS Code ###
 .vscode/
 
-### Add By Chanos ###
+### Add by Chanos ###
 application.yml
 webConfig.class
+aws.yml
