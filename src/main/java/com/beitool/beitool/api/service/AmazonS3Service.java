@@ -1,23 +1,17 @@
 package com.beitool.beitool.api.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * AWS S3에 파일 업로드 등을 하기 위함.
@@ -34,8 +28,11 @@ public class AmazonS3Service {
     @Value("${cloud.aws.s3.bucket}")
     public String bucket;
 
+    @Value("${beitool-bucket.s3.ap-northeast-2.amazonaws.com/}")
+    private String filePath;
+
     /*S3에 파일 업로드*/
-    public String uploadToS3(MultipartFile file, String dirName) {
+    public Map<String, String> uploadToS3(MultipartFile file, String dirName) {
         //사진 이름은 현재 시간(밀리초)
         String nowTime = new SimpleDateFormat("YYYYMMDDHHmmss").format(System.currentTimeMillis());
         String fileName = dirName + "/" + nowTime; //S3에 저장될 파일 이름
@@ -51,7 +48,12 @@ public class AmazonS3Service {
             System.out.println("***파일 업로드 실패");
             e.printStackTrace();
         }
-        return fileName;
+
+        Map<String, String> fileInfo = new HashMap<>();
+        fileInfo.put("fileName", fileName);
+        fileInfo.put("filePath", filePath+fileName);
+
+        return fileInfo;
     }
 
     /*S3의 파일 삭제*/

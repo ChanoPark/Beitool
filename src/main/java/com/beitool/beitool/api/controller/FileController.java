@@ -1,11 +1,13 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.service.AmazonS3Service;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.apache.http.HttpResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -23,13 +25,22 @@ public class FileController {
 
     /*재고관리 게시판 파일 업로드*/
     @PostMapping("/board/stock/upload/file/")
-    public String uploadStock(@RequestParam("file")MultipartFile file) {
-        return amazonS3Service.uploadToS3(file, "stock");
+    public UploadStockResponseDto uploadStock(@RequestParam("file")MultipartFile file) {
+        Map<String, String> fileInfo = amazonS3Service.uploadToS3(file, "stock");
+        return new UploadStockResponseDto(fileInfo.get("fileName"),fileInfo.get("filePath"));
     }
 
     /*S3 파일 삭제*/
-    @PostMapping("/board/stock/delete/file/")
-    public void deleteStock(@RequestBody Map<String, String> param) {
+    @DeleteMapping("/board/stock/delete/file/")
+    public ResponseEntity deleteStock(@RequestBody Map<String, String> param) {
         amazonS3Service.deleteFile(param.get("fileName"));
+        return new ResponseEntity("Delete file success", HttpStatus.OK);
+    }
+
+    /***--DTO--***/
+    @Data @AllArgsConstructor
+    static class UploadStockResponseDto {
+        private String fileName;
+        private String filePath;
     }
 }
