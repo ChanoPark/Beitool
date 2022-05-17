@@ -1,3 +1,18 @@
+## 자영업자와 종업원을 위한 사업장 관리 애플리케이션, Beitool
+
+### Goal 
+- 수기로 작성되는 등 사업장 관리 편의성 증가
+- 자영업자와 종업원 간 수직적인 구조로 인한 업무 비효율 개선
+
+### Tech
+`Spring boot` `JPA` `MySQL` `AWS EC2` `AWS RDS` `AWS S3`
+
+### Description
+
+<details>
+    <summary><b>1. Beitool 프로젝트 제안서</b></summary>
+<div markdown="1">
+    
 ### 💥자영업자를 위한 업장 관리 애플리케이션 Beitool💥
 ### 1. **개요**
 
@@ -25,10 +40,10 @@
 
 1. 사업장을 운영하는 업주
 
-    - 여러 개의 사업장을 관리하는 업주
+    - 여러 개의 사업장을 관리하는 업주  
     - 사업장에 종업원만 두고 사업장을 운영하는 업주
 
-  b. 사업장에 종사하는 종업원
+  b. 사업장에 종사하는 종업원  
   c. 그 외 사업장과 관련된 인원
 
 ---
@@ -53,3 +68,48 @@
 4.  (종업원)특이사항 및 변동사항이 발생할 경우, 단체 채팅방에 이를 알리고, 인수인계 사항을 작성한다.
 5.  업주는 종업원 별로 개인 업무를 지시해 기록할 수 있고, 종업원은 수행 후 완료 표시를 한다.
 6.  종업원은 현재 받아야할 급여가 얼마인지 확인할 수 있다.
+    <hr>
+
+    </div>
+</details>
+
+<details>
+<summary><b>2. 요구사항 도출</b></summary>
+    <div markdown="1">
+        <li> 시나리오를 통해 요구사항을 도출하고 간단한 프로토타입을 작성했습니다.</li>
+        <li>예상되는 고객층인 주변 사업장에 직접 방문하여 인터뷰를 진행하여 요구사항을 도출하였습니다.</li>
+        <li> 사업장이 운영되는 프로세스에 대한 흐름과 실제 필요한 서비스에 대한 분석을 할 수 있었습니다.</li> 
+        <br>
+        <a href="https://docs.google.com/document/d/1bTl9Ts1bFiJXYVZBmmt_4RRsX8_jwH6X/edit?usp=sharing&ouid=104955200740988354269&rtpof=true&sd=true">:point_right:요구사항 도출 결과:point_left:</a>
+    </div>
+</details>
+
+<details>
+    <summary> <b>3. 와이어 프레임</b> </summary>
+    <div markdown="1">
+        <li>팀원 간 원할한 소통과 이해를 돕기 위한 와이어 프레임입니다.</li>
+        <li>개발 과정에서 많은 도움이 되었습니다.</li>
+<br>
+<a href="https://miro.com/app/board/uXjVOHIkCfk=/">:point_right:와이어 프레임 전체 보기(Miro):point_left:</a>  
+<p align=center><와이어 프레임 일부></p>
+<img src = "https://user-images.githubusercontent.com/77626299/168792110-c5abceca-20f5-43f1-be4e-dbffec47c393.png" width="480px" height="480px">
+&nbsp;<img src = "https://user-images.githubusercontent.com/77626299/168792833-e33f7d6c-ae16-4d9e-8ad2-cb849fb298c1.png" width="520px" height="480px">  
+    
+</div>
+</details>
+
+<details>
+    <summary><b>4. ER 모델</b></summary>
+<div markdown="1">
+    효율적인 DB 설계를 위한 ER 모델입니다.  
+    사용자가 많아졌을 때, 테이블의 크기와 조회 빈도를 고려하여 설계하였습니다.
+    <br>
+    <a href="https://www.erdcloud.com/d/jWMmwwkNTojueJHRS">:point_right:ER 모델 전체 보기(ERDCLOUD):point_left:</a>    
+    <br>
+    <br>
+    <전체 구조>  <br>
+    
+<img src = "https://user-images.githubusercontent.com/77626299/168794105-1f0c7fad-1a2b-418c-a87b-1f8f706e5b8c.png" width="50%" height="50%">
+
+</div>
+</details>
