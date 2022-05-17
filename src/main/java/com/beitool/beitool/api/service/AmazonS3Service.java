@@ -28,7 +28,7 @@ public class AmazonS3Service {
     @Value("${cloud.aws.s3.bucket}")
     public String bucket;
 
-    @Value("${beitool-bucket.s3.ap-northeast-2.amazonaws.com/}")
+    @Value("${cloud.aws.s3.filePath}")
     private String filePath;
 
     /*S3에 파일 업로드*/

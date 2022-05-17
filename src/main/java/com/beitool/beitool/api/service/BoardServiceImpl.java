@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ import java.util.List;
  * 6.기타
  *    6-1.ToDoList 업무 완료 표시
  * @author Chanos
- * @since 2022-05-01
+ * @since 2022-05-12
  */
 @Service
 @RequiredArgsConstructor
@@ -81,11 +82,15 @@ public class BoardServiceImpl {
                 String employeeName = belongWorkInfoRepository.findBelongInfo(employee, store).getName();
                 toDoListResponseDto.addPost(id, title, content, employeeName, isClear, jobDate);
             }
+            toDoListResponseDto.setMessage("Success");
+
+            //마감일 기준으로 정렬(오름차순)
+            Collections.sort(toDoLists, new ToDoListComparator());
+
         } catch (NoResultException e) {
             return new ToDoListResponseDto("Failed");
         }
 
-        toDoListResponseDto.setMessage("Success");
         return toDoListResponseDto;
     }
 
@@ -138,22 +143,27 @@ public class BoardServiceImpl {
     }
 
     /*재고관리 작성*/
-    public void createStockPost(StockRequestDto stockRequestDto, Member member) {
-        //일단 게시글부터 업로드하는걸로
-        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName();
-        String productName = stockRequestDto.getProductName();
-        Integer quantity = stockRequestDto.getQuantity();
-        String description = stockRequestDto.getDescription();
-        LocalDateTime expirationTime = stockRequestDto.getExpirationTime();
-        LocalDateTime modifyTime = stockRequestDto.getModifyTime();
-        LocalDateTime createdDate = LocalDateTime.now();
+    public StockResponseDto createStockPost(StockRequestDto stockRequestDto, Member member) {
+        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName(); //작성자
+        String productName = stockRequestDto.getProductName(); //상품명(부모 테이블의 제목에 들어감)
+        Integer quantity = stockRequestDto.getQuantity(); //개수
+        String description = stockRequestDto.getDescription(); //설명
+        LocalDateTime expirationTime = stockRequestDto.getExpirationTime(); //유통기한
+        LocalDateTime createdDate = LocalDateTime.now(); //작성일
 
+        String productFileName = stockRequestDto.getProductFileName(); //파일명
+        String productFilePath = stockRequestDto.getProductFilePath(); //파일경로(URL)
+
+        //객체 생성
         Stock stock = new Stock(authorName, createdDate, member, member.getActiveStore(), description,
-                productName, quantity, expirationTime, modifyTime);
+                productName, quantity, expirationTime, createdDate,productFileName, productFilePath);
 
+        //DB저장
+        Long postId = boardRepository.createPost(stock);
 
-
+        return new StockResponseDto(postId, authorName, productName,quantity, description, expirationTime, productFilePath);
     }
+
 
     /***--게시글 조회--***/
     /*공지사항 게시글 조회*/

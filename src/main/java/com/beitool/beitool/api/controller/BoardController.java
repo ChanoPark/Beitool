@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.Map;
 
 /**
@@ -26,6 +25,7 @@ import java.util.Map;
  * 3.게시글 조회
  *    3-1.공지시항 조회
  *    3-2.자유게시판 조회
+ *    3-3.재고관리 조회
  * 4.게시글 삭제
  * 5.게시글 수정
  *    5-1.공지사항 수정
@@ -61,7 +61,7 @@ public class BoardController {
     public ToDoListResponseDto readToDoListBoard(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
-        Integer page = boardRequestDto.getPage();
+        Integer page = boardRequestDto.getPage()-1;
         return boardServiceImpl.readToDoList(member.getActiveStore(), page);
     }
 
@@ -99,16 +99,18 @@ public class BoardController {
         Belong belongInfo = belongWorkInfoRepository.findBelongInfo(author, author.getActiveStore());
         //사장만 업무를 지시할 수 있다.
         if (belongInfo.getPosition().equals(MemberPosition.President))
-            return boardServiceImpl.createToDoList(author, belongInfo, toDoListRequestDto);
+            return boardServiceImpl.createToDoPost(author, belongInfo, toDoListRequestDto);
         else
             return new ToDoListResponseDto("Failed");
     }
 
     /*재고관리 작성*/
-//    @PostMapping("/board/stock/create/post/")
-//    public UploadResult createStockPost(@RequestParam("userKey") String userKey, @RequestParam("imageFile")MultipartFile multipartFile) {
-//        ImageFile
-//    }
+    @PostMapping("/board/stock/create/post/")
+    public StockResponseDto createStockPost(@RequestBody StockRequestDto stockRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(stockRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        return boardServiceImpl.createStockPost(stockRequestDto, member);
+    }
 
     /***--게시글 조회--***/
     /*공지사항 조회*/
