@@ -19,6 +19,7 @@ import java.util.List;
  * 6.근로 정보 조회(지도 들어갔을 때 출근상태인지 확인)
  * 7.근로 정보 수정(퇴근)
  * 8.소속되어 있는 직원 목록 조회
+ * 9.이름 조회
  * Implemented by Chanos
  */
 @Repository
@@ -88,5 +89,13 @@ public class BelongWorkInfoRepository {
                 .setParameter("store", store)
                 .setParameter("position", MemberPosition.Employee)
                 .getResultList();
+    }
+    /*회원 이름 조회*/
+    public String findName(Store store, Member member) {
+        Belong findBelong = em.createQuery("select b.name from Belong b where b.store=:store and b.member=:member",Belong.class)
+                .setParameter("store", store)
+                .setParameter("member", member)
+                .getSingleResult();
+        return findBelong.getName();
     }
 }

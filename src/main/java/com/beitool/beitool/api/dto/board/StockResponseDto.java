@@ -16,6 +16,10 @@ import java.time.LocalDateTime;
  */
 @Data @AllArgsConstructor
 public class StockResponseDto {
+    public StockResponseDto(String message) {
+        this.message = message;
+    }
+    private String message;
     private Long id;
 
     private String authorName;
@@ -27,6 +31,10 @@ public class StockResponseDto {
     @JsonDeserialize(using= LocalDateTimeDeserializer.class)
     @JsonSerialize(using= LocalDateTimeSerializer.class)
     private LocalDateTime expirationTime; //유통기한
+
+    @JsonDeserialize(using= LocalDateTimeDeserializer.class)
+    @JsonSerialize(using= LocalDateTimeSerializer.class)
+    private LocalDateTime createdDate; //최종 수정 시간
 
     private String productFilePath; //파일 경로
 }

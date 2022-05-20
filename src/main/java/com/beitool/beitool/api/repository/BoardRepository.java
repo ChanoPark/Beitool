@@ -1,11 +1,8 @@
 package com.beitool.beitool.api.repository;
 
-import com.beitool.beitool.domain.board.Announcement;
-import com.beitool.beitool.domain.board.BoardDomain;
+import com.beitool.beitool.domain.board.*;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
-import com.beitool.beitool.domain.board.Free;
-import com.beitool.beitool.domain.board.ToDoList;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +14,11 @@ import java.util.List;
 /**
  * 각종 게시판과 관련된 서비스를 제공하기 위해 DB와 상호작용하는 Repository
  * 1.게시글 목록 조회
+ *    1-1.게시글 목록 조회
+ *    1-2.ToDoList 목록 조회
+ *    1-3.재고관리 목록 조회
  * 2.전체 게시글 개수 조회(페이징)
  * 3.게시글 조회
- *    3-1.게시글 조회
- *    3-2.ToDoList 조회 (제목과 게시글이 분리되어 있지 않기 때문에)
  * 4.게시글 작성
  * 5.게시글 삭제
  * 6.글쓴이 찾기
@@ -28,8 +26,9 @@ import java.util.List;
  *    7-1.공지사항 조회
  *    7-2.자유게시판 조회
  *    7-3.ToDoList 조회
+ *    7-4.재고관리 조회
  * @author Chanos
- * @since 2022-04-29
+ * @since 2022-05-20
  */
 @Repository
 @Transactional
@@ -38,6 +37,7 @@ public class BoardRepository<T extends BoardDomain> {
     @PersistenceContext
     private EntityManager em;
 
+    /***--게시글 목록 조회--***/
     /*게시글 목록 조회*/
     public List<BoardDomain> readBoard(Store store, String boardType, Integer page) {
         List<BoardDomain> findPosts = em.createQuery("select b from BoardDomain b" +
@@ -50,6 +50,23 @@ public class BoardRepository<T extends BoardDomain> {
         return findPosts;
     }
 
+    /*ToDoList 조회*/
+    public List readToDoListPost(Store store, Integer page) {
+        return em.createQuery("select b from BoardDomain b where type(b) IN (ToDoList) and b.store = :store")
+                .setParameter("store", store)
+                .setFirstResult(page*20)
+                .setMaxResults(20)
+                .getResultList();
+    }
+
+    /*재고관리 게시글 조회*/
+    public List readStockPost(Store store) {
+        return em.createQuery("select b from BoardDomain b" +
+                        " where type(b) In (Stock) and b.store = :store order by b.id DESC ")
+                .setParameter("store", store)
+                .getResultList();
+    }
+
     /*전체 게시글 개수 조회(페이징)*/
     public Long countPost(Store store, String boardType) {
         return (Long) em.createQuery("select count(b) from BoardDomain b " +
@@ -59,7 +76,6 @@ public class BoardRepository<T extends BoardDomain> {
                 .getSingleResult();
     }
 
-
     /***--게시글 조회--***/
     /*게시글 조회*/
     public Object readPost(Long id, Object board) throws NoResultException {
@@ -68,16 +84,6 @@ public class BoardRepository<T extends BoardDomain> {
                 .setParameter("board", board.getClass())
                 .setParameter("id", id)
                 .getSingleResult();
-    }
-
-    /*ToDoList 조회*/
-    public List<BoardDomain> readToDoListPost(Store store, Object board, Integer page) {
-        return em.createQuery("select b from BoardDomain b where type(b) IN (:board) and b.store = :store")
-                .setParameter("board", board.getClass())
-                .setParameter("store", store)
-                .setFirstResult(page*20)
-                .setMaxResults(20)
-                .getResultList();
     }
 
     /*게시글 작성*/
@@ -111,5 +117,7 @@ public class BoardRepository<T extends BoardDomain> {
         return em.find(Free.class, id);
     }
     /*ToDoList 조회*/
-    public ToDoList findToDoListPost(Long id) {return em.find(ToDoList.class, id);}
+    public ToDoList findToDoListPost(Long id) { return em.find(ToDoList.class, id); }
+    /*재고관리 조회*/
+    public Stock findStockPost(Long id) { return em.find(Stock.class, id); }
 }
