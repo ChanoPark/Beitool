@@ -69,8 +69,7 @@ public class BoardController {
     public ToDoListResponseDto readToDoListBoard(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
-        Integer page = boardRequestDto.getPage()-1;
-        return boardServiceImpl.readToDoList(member.getActiveStore(), page);
+        return boardServiceImpl.readToDoList(member.getActiveStore());
     }
 
     /*재고관리 목록 조회*/

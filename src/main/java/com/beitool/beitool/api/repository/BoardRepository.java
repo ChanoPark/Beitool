@@ -51,11 +51,10 @@ public class BoardRepository<T extends BoardDomain> {
     }
 
     /*ToDoList 조회*/
-    public List readToDoListPost(Store store, Integer page) {
-        return em.createQuery("select b from BoardDomain b where type(b) IN (ToDoList) and b.store = :store")
+    public List readToDoListPost(Store store) {
+        return em.createQuery("select b from BoardDomain b where" +
+                        " type(b) IN (ToDoList) and b.store = :store order by b.id DESC")
                 .setParameter("store", store)
-                .setFirstResult(page*20)
-                .setMaxResults(20)
                 .getResultList();
     }
 

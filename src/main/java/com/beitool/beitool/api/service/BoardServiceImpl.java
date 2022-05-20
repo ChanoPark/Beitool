@@ -75,20 +75,19 @@ public class BoardServiceImpl {
     }
 
     /*ToDoList 게시글 조회*/
-    public ToDoListResponseDto readToDoList(Store store, Integer page) {
+    public ToDoListResponseDto readToDoList(Store store) {
         ToDoListResponseDto toDoListResponseDto = new ToDoListResponseDto();
         try {
-            List<ToDoList> toDoLists = boardRepository.readToDoListPost(store, page);
+            List<ToDoList> toDoLists = boardRepository.readToDoListPost(store);
             for (ToDoList findPost : toDoLists) {
                 Long id = findPost.getId();
                 String title = findPost.getTitle();
-                String content = findPost.getContent();
                 boolean isClear = findPost.isClear();
                 LocalDate jobDate = findPost.getJobDate();
 
                 Member employee = findPost.getEmployee();
                 String employeeName = belongWorkInfoRepository.findBelongInfo(employee, store).getName();
-                toDoListResponseDto.addPost(id, title, content, employeeName, isClear, jobDate);
+                toDoListResponseDto.addPost(id, title, employeeName, isClear, jobDate);
             }
             toDoListResponseDto.setMessage("Success");
 
@@ -150,21 +149,19 @@ public class BoardServiceImpl {
     public ToDoListResponseDto createToDoPost(Member author, Belong belongInfo, ToDoListRequestDto toDoListRequestDto) {
         Store store = author.getActiveStore();
         String authorName = belongInfo.getName();
-        String content = toDoListRequestDto.getContent();
         String title = toDoListRequestDto.getTitle();
         LocalDateTime createdTime = LocalDateTime.now(); //업무 지시 시간
         LocalDate jobDate = toDoListRequestDto.getJobDate(); // 업무 기한
         Member employee = memberRepository.findOne(toDoListRequestDto.getEmployee()); //지시 대상 조회
-        Integer page = toDoListRequestDto.getPage()-1; //페이지
 
         //조회된 직원이 없으면 실패 반환
         if (employee == null)
             return new ToDoListResponseDto("Failed");
 
-        ToDoList toDoList = new ToDoList(authorName, content, createdTime, author, store, title, jobDate, employee);
+        ToDoList toDoList = new ToDoList(authorName, createdTime, author, store, title, jobDate, employee);
 
         boardRepository.createPost(toDoList);
-        return readToDoList(store, page);
+        return readToDoList(store);
     }
 
     /*재고관리 작성*/
@@ -303,16 +300,15 @@ public class BoardServiceImpl {
         if(author.equals(member)) { //글쓴사람과 같지 않으면 수정할 수 없음.
             Long postId = toDoListRequestDto.getId();
             Store store = author.getActiveStore();
-            Integer page = toDoListRequestDto.getPage()-1;
             Member employee = memberRepository.findOne(toDoListRequestDto.getEmployee());
 
             LocalDate jobDate = toDoListRequestDto.getJobDate();
             LocalDateTime modifiedTime = LocalDateTime.now();
 
             ToDoList findPost = boardRepository.findToDoListPost(postId);
-            findPost.updatePost(toDoListRequestDto.getTitle(), toDoListRequestDto.getContent(), employee, modifiedTime, jobDate);
+            findPost.updatePost(toDoListRequestDto.getTitle(), employee, modifiedTime, jobDate);
 
-            return readToDoList(store, page);
+            return readToDoList(store);
         } else {
             return new ToDoListResponseDto("Failed");
         }

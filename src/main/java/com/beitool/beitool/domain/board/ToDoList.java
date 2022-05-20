@@ -24,19 +24,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ToDoList extends BoardDomain{
 
-    public ToDoList(String authorName, String content, LocalDateTime createdDate,
+    public ToDoList(String authorName, LocalDateTime createdDate,
                 Member author, Store store, String title, LocalDate jobDate, Member employee) {
         super(author, store, title, createdDate);
         this.authorName = authorName;
-        this.content = content;
         this.jobDate = jobDate;
         this.employee = employee;
         this.isClear = false;
     }
     /*게시글 수정*/
-    public void updatePost(String title, String content, Member employee, LocalDateTime modifiedTime, LocalDate jobDate) {
+    public void updatePost(String title, Member employee, LocalDateTime modifiedTime, LocalDate jobDate) {
         super.updatePost(title, modifiedTime);
-        this.content = content;
         this.jobDate = jobDate;
         this.employee = employee;
         this.isClear = false;
@@ -54,8 +52,6 @@ public class ToDoList extends BoardDomain{
 
     @Column(name="author_name")
     private String authorName;
-
-    private String content;
 
     @Column(name="is_clear")
     private boolean isClear;

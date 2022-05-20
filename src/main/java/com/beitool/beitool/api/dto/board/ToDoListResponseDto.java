@@ -6,7 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,8 +26,8 @@ public class ToDoListResponseDto {
     private List<PostInfo> posts;
     private String message;
 
-    public void addPost(Long id, String title, String content, String employeeName, boolean isClear, LocalDate jobDate) {
-        PostInfo newPost = new PostInfo(id, title, content, employeeName, isClear, jobDate);
+    public void addPost(Long id, String content, String employeeName, boolean isClear, LocalDate jobDate) {
+        PostInfo newPost = new PostInfo(id, content, employeeName, isClear, jobDate);
         posts.add(newPost);
     }
 
@@ -36,7 +35,6 @@ public class ToDoListResponseDto {
     public class PostInfo {
         private Long id;
         private String title;
-        private String content;
         private String employeeName;
         private boolean isClear;
 
