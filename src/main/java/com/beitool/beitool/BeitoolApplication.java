@@ -1,6 +1,5 @@
 package com.beitool.beitool;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
@@ -16,7 +15,6 @@ public class BeitoolApplication {
 		new SpringApplicationBuilder(BeitoolApplication.class)
 				.properties(APPLICATION_LOCATIONS)
 				.run(args);
-//		SpringApplication.run(BeitoolApplication.class, args);
 	}
 
 }

@@ -1,23 +1,25 @@
 package com.beitool.beitool.api.service;
 
+import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.Store;
 import com.beitool.beitool.domain.WorkInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.beitool.beitool.domain.WorkSchedule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
  * 근로와 관련된 서비스
  * 1.출퇴근
- * 
+ * 2.근무 시프트 작성
  * 
  * @author Chanos
  * @since 2022-04-18
@@ -65,4 +67,16 @@ public class WorkService {
         System.out.println("***출퇴근 완료");
         return result;
     }
+
+    /*근무 시프트 작성*/
+    public void createSchedule(Member member, ScheduleCreateRequestDto scheduleCreateRequestDto) {
+        Store store = member.getActiveStore();
+        LocalDate workDay = scheduleCreateRequestDto.getWorkDay();
+        LocalDateTime workStartTime = scheduleCreateRequestDto.getWorkStartTime();
+        LocalDateTime workEndTime = scheduleCreateRequestDto.getWorkEndTime();
+
+        WorkSchedule workSchedule = new WorkSchedule(member, store, workDay, workStartTime, workEndTime);
+        belongWorkInfoRepository.createSchedule(workSchedule);
+    }
+
 }

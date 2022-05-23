@@ -3,10 +3,8 @@ package com.beitool.beitool.api.controller;
 import com.beitool.beitool.api.dto.store.*;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
-import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
-import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
@@ -42,7 +40,6 @@ public class StoreApiController {
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
     private final BelongWorkInfoRepository belongWorkInfoRepository;
-    private final StoreRepository storeRepository;
 
     /*사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
@@ -62,7 +59,7 @@ public class StoreApiController {
         Store store = storeService.createStore(createStoreRequest.placeName,
                 createStoreRequest.address, createStoreRequest.detailAddr);
 
-        //생성된 사업장에 사장 소속시키기
+        //생성된 사업장에 사장 소속시키기(직급도 여기서 세팅)
         LocalDate joinDate = storeService.joinStore(member, store, createStoreRequest.getPlaceName());
 
         //ResponseDTO에 정보 삽입(try-catch문으로 인해 생성자에서 바로 삽입을 못함->설계를 잘하면 한번에 할 수 있지 않을까?)

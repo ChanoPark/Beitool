@@ -19,7 +19,8 @@ import java.util.List;
  * 6.근로 정보 조회(지도 들어갔을 때 출근상태인지 확인)
  * 7.근로 정보 수정(퇴근)
  * 8.소속되어 있는 직원 목록 조회
- * 9.이름 조회
+ * 9.회원 이름 조회
+ * 10.근무 시프트 작성
  * Implemented by Chanos
  */
 @Repository
@@ -35,7 +36,8 @@ public class BelongWorkInfoRepository {
 
     /*출근 정보 생성*/
     public void createWorkInfo(WorkInfo workInfo) {
-        em.persist(workInfo);}
+        em.persist(workInfo);
+    }
 
     /*소속되어 있는 모든 사업장의 개수 조회*/
     public int findBelongCount(Member member) {
@@ -97,5 +99,10 @@ public class BelongWorkInfoRepository {
                 .setParameter("member", member)
                 .getSingleResult();
         return findBelong.getName();
+    }
+
+    /*근무 시프트 작성*/
+    public void createSchedule(WorkSchedule workSchedule) {
+        em.persist(workSchedule);
     }
 }
