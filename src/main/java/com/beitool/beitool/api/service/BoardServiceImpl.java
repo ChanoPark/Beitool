@@ -332,7 +332,7 @@ public class BoardServiceImpl {
 
         String productFileName = stockRequestDto.getProductFileName();
         String productFilePath = stockRequestDto.getProductFilePath();
-        String authorName = belongWorkInfoRepository.findName(member.getActiveStore(), member);
+        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName();
 
         findPost.updateStock(quantity, expirationTime, modifiedTime, authorName, description, productName);
 

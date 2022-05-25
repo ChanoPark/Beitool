@@ -1,23 +1,31 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
+import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.WorkService;
 import com.beitool.beitool.domain.Member;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.Map;
+
 /**
  * 회원 근로와 관련된 컨트롤러
  * 1.출퇴근
- * 2.근무 시프트 작성
+ * 2.근무 시프트 작성(캘린더)
+ * 3.근무 시프트 조회(캘린더)
+ * 4.근무 시프트 삭제(캘린더)
  *
  * @since 2022-04-18
  * @author Chanos
@@ -29,29 +37,50 @@ public class WorkApiController {
     private final MemberRepository memberRepository;
     private final WorkService workService;
 
-    /*출퇴근(프론트에서 결과만 받음)*/
+    /*1.출퇴근(프론트에서 결과만 받음)*/
     @PostMapping("/work/commute/")
     public CommuteResponseDto workCommute(@RequestBody CommuteRequestDto commuteRequestDto) {
         String isWorking = commuteRequestDto.getWorkType(); //출근인지 퇴근인지
         return new CommuteResponseDto(workService.workCommute(isWorking, commuteRequestDto.getAccessToken()));
     }
 
-    /*근무 시프트 작성*/
+    /*2.근무 시프트 작성*/
     @PostMapping("/work/create/schedule/")
     public ResponseEntity createSchedule(@RequestBody ScheduleCreateRequestDto scheduleCreateRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleCreateRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
-        workService.createSchedule(member, scheduleCreateRequestDto);
-        return new ResponseEntity("Success", HttpStatus.OK);
+        return workService.createSchedule(member, scheduleCreateRequestDto);
     }
 
-    /*출퇴근 request DTO*/
+    /*3.근무 시프트 조회*/
+    @PostMapping("/work/read/schedule/")
+    public ScheduleReadResponseDto readSchedule(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        LocalDate day = scheduleReadRequestDto.getDay();
+        return workService.readSchedule(member, day);
+    }
+
+    /*4.근무 시프트 삭제*/
+    @PostMapping("/work/delete/schedule/")
+    public void deleteSchedule(@RequestBody Map<String, String> param) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+
+        Long postId = Long.parseLong(param.get("id"));
+
+        workService.deleteSchedule(member, postId);
+    }
+
+    /*---------Inner DTO------------*/
+
+    /*출퇴근 Request DTO*/
     @Data
     static class CommuteRequestDto {
         private String workType;
         private String accessToken;
     }
-    /*출퇴근 response DTO*/
+    /*출퇴근 Response DTO*/
     @Data
     static class CommuteResponseDto {
         private String message;
@@ -59,5 +88,15 @@ public class WorkApiController {
         public CommuteResponseDto(String message){
             this.message = message;
         }
+    }
+
+    /*근무 시프트 Request DTO*/
+    @Data
+    static public class ScheduleReadRequestDto {
+        private String accessToken;
+
+        @JsonSerialize(using= LocalDateSerializer.class)
+        @JsonDeserialize(using= LocalDateDeserializer.class)
+        private LocalDate day;
     }
 }
