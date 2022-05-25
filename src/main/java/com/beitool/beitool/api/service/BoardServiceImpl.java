@@ -183,7 +183,8 @@ public class BoardServiceImpl {
         //DB저장
         Long postId = boardRepository.createPost(stock);
 
-        return new StockResponseDto("Success", postId, authorName, productName,quantity, description, expirationTime, createdDate, productFilePath);
+        return new StockResponseDto("Success", postId, authorName, productName,quantity, description,
+                expirationTime, createdDate, productFilePath, productFileName);
     }
 
 
@@ -227,8 +228,9 @@ public class BoardServiceImpl {
             LocalDateTime expirationTime = findPost.getExpirationTime();
             LocalDateTime createdDate = findPost.getCreatedTime();
             String productFilePath = findPost.getProductFilePath();
+            String productFileName = findPost.getProductFileName();
             return new StockResponseDto("Success", id, authorName, productName, quantity,
-                                            description, expirationTime, createdDate, productFilePath);
+                                            description, expirationTime, createdDate, productFilePath, productFileName);
         } catch (NoResultException e) {
             return new StockResponseDto("Failed");
         }
@@ -327,12 +329,15 @@ public class BoardServiceImpl {
 
         String description = stockRequestDto.getDescription();
         String productName = stockRequestDto.getProductName();
+
+        String productFileName = stockRequestDto.getProductFileName();
+        String productFilePath = stockRequestDto.getProductFilePath();
         String authorName = belongWorkInfoRepository.findName(member.getActiveStore(), member);
 
         findPost.updateStock(quantity, expirationTime, modifiedTime, authorName, description, productName);
 
         return new StockResponseDto("Success", postId, authorName, productName, quantity,
-                description, expirationTime, modifiedTime, findPost.getProductFilePath());
+                description, expirationTime, modifiedTime, productFileName, productFilePath);
     }
 
     /*재고관리 파일 수정*/

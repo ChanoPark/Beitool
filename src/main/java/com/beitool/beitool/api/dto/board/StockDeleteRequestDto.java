@@ -10,6 +10,6 @@ import lombok.Data;
 @Data
 public class StockDeleteRequestDto {
     private String accessToken;
-    private String fileName;
+    private String productFileName;
     private Long id;
 }

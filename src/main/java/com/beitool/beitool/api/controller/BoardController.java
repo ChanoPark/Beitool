@@ -170,7 +170,7 @@ public class BoardController {
 
         //사진 삭제 과정
         if (deleteResult.equals("Success")) {
-            amazonS3Service.deleteFile(stockDeleteRequestDto.getFileName());
+            amazonS3Service.deleteFile(stockDeleteRequestDto.getProductFileName());
             return new StockReadResponseDto("Success");
         } else {
             return new StockReadResponseDto("Failed");

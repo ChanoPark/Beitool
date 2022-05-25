@@ -40,7 +40,7 @@ public class FileController {
     /***--DTO--***/
     @Data @AllArgsConstructor
     static class UploadStockResponseDto {
-        private String fileName;
-        private String filePath;
+        private String productFileName;
+        private String productFilePath;
     }
 }

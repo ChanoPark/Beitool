@@ -37,4 +37,5 @@ public class StockResponseDto {
     private LocalDateTime createdDate; //최종 수정 시간
 
     private String productFilePath; //파일 경로
+    private String productFileName; //파일 이름
 }
