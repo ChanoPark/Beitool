@@ -24,10 +24,21 @@ import java.time.LocalDateTime;
 @Getter @NoArgsConstructor
 public class WorkSchedule {
 
-    public WorkSchedule(Member member, Store store,
+    public WorkSchedule(Member employee, Member author, Store store,
                         LocalDate workDay, LocalDateTime workStartTime, LocalDateTime workEndTime) {
-        this.member = member;
+        this.employee = employee;
+        this.author = author;
         this.store = store;
+        this.workDay = workDay;
+        this.workStartTime = workStartTime;
+        this.workEndTime = workEndTime;
+    }
+
+    /*근무 예정 기록 수정*/
+    public void updateWorkSchedule(Member employee, Member author, LocalDate workDay,
+                                   LocalDateTime workStartTime, LocalDateTime workEndTime) {
+        this.employee = employee;
+        this.author = author;
         this.workDay = workDay;
         this.workStartTime = workStartTime;
         this.workEndTime = workEndTime;
@@ -38,7 +49,10 @@ public class WorkSchedule {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="member_id")
-    private Member member;
+    private Member employee;
+
+    @ManyToOne(fetch=FetchType.LAZY)
+    private Member author; //작성자
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="store_id")

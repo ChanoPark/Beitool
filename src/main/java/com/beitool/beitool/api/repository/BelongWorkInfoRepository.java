@@ -26,6 +26,8 @@ import java.util.List;
  * 11.근무 기록 조회
  * 12.배정된 근무 조회
  * 13.근무 예정 직원 찾기
+ * 14.배정된 근무 삭제
+ * 15.예정된 근무 조회(근무 시프트 수정)
  *
  * @author Chanos
  * @since 2022-05-25
@@ -140,5 +142,10 @@ public class BelongWorkInfoRepository {
         em.createQuery("delete from WorkSchedule w where w.id=:postId")
                 .setParameter("postId", postId)
                 .executeUpdate();
+    }
+
+    /*15.예정된 근무 조회(근무 시프트 수정)*/
+    public WorkSchedule findSchedule(Long postId) {
+        return em.find(WorkSchedule.class, postId);
     }
 }

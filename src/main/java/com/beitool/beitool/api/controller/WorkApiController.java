@@ -2,6 +2,7 @@ package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
+import com.beitool.beitool.api.dto.ScheduleUpdateRequestDto;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.WorkService;
@@ -26,6 +27,7 @@ import java.util.Map;
  * 2.근무 시프트 작성(캘린더)
  * 3.근무 시프트 조회(캘린더)
  * 4.근무 시프트 삭제(캘린더)
+ * 5.근무 시프트 수정(캘린더)
  *
  * @since 2022-04-18
  * @author Chanos
@@ -63,13 +65,22 @@ public class WorkApiController {
 
     /*4.근무 시프트 삭제*/
     @PostMapping("/work/delete/schedule/")
-    public void deleteSchedule(@RequestBody Map<String, String> param) {
+    public ResponseEntity deleteSchedule(@RequestBody Map<String, String> param) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
         Member member = memberRepository.findOne(memberId);
 
         Long postId = Long.parseLong(param.get("id"));
 
-        workService.deleteSchedule(member, postId);
+        return workService.deleteSchedule(member, postId);
+    }
+
+    /*5.근무 시프트 수정*/
+    @PostMapping("/work/update/schedule/")
+    public ResponseEntity updateSchedule(@RequestBody ScheduleUpdateRequestDto scheduleUpdateRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleUpdateRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        return workService.updateSchedule(member, scheduleUpdateRequestDto);
+
     }
 
     /*---------Inner DTO------------*/

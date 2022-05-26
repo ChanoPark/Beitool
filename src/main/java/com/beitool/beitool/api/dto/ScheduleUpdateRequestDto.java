@@ -14,15 +14,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * 스케줄 작성을 위한 Request DTO
+ * 스케줄 업데이트를 위한 Request DTO
  * @author Chanos
- * @since 2022-05-23
+ * @since 2022-05-26
  */
-
 @Data
-public class ScheduleCreateRequestDto {
+public class ScheduleUpdateRequestDto {
     private String accessToken;
     private Long employee; //업무 대상
+    private Long id; //게시글 ID
 
     @JsonDeserialize(using= LocalDateDeserializer.class)
     @JsonSerialize(using= LocalDateSerializer.class)
@@ -40,5 +40,4 @@ public class ScheduleCreateRequestDto {
     @JsonFormat(pattern="yyyy-MM-dd HH:mm")
     @Column(name="work_end_time")
     private LocalDateTime workEndTime; //퇴근 시간
-
 }

@@ -30,12 +30,24 @@ public class ScheduleReadResponseDto {
 
     @Data
     public static class WorkInfoResponse {
-        public WorkInfoResponse(String name, LocalDateTime workStartTime, LocalDateTime workEndTime) {
-            this.name = name;
+        public WorkInfoResponse(Long id, String employeeName, LocalDateTime workStartTime, LocalDateTime workEndTime) {
+            this.id = id;
+            this.employeeName = employeeName;
             this.workStartTime = workStartTime;
             this.workEndTime= workEndTime;
         }
-        private String name;
+
+        public WorkInfoResponse(Long id, String employeeName, String authorName, LocalDateTime workStartTime, LocalDateTime workEndTime) {
+            this.id = id;
+            this.employeeName = employeeName;
+            this.authorName = authorName;
+            this.workStartTime = workStartTime;
+            this.workEndTime= workEndTime;
+        }
+
+        private Long id; //게시글 id
+        private String employeeName;
+        private String authorName;
 
         @JsonDeserialize(using= LocalDateTimeDeserializer.class)
         @JsonSerialize(using= LocalDateTimeSerializer.class)
