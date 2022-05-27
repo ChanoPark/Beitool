@@ -26,11 +26,11 @@ public class SalaryCalPresidentResponseDto {
         this.totalWorkingMin = totalWorkingMin;
     }
 
-    List<SalaryInfo> salaryInfos;
     Integer totalSalary; // 모든 직원의 급여 합계
     Integer totalWorkingHour; //모든 직원의 근로 시간(시간)
     Integer totalWorkingMin;  //모든 직원의 근로 시간(분)
 
+    List<SalaryInfo> salaryInfos;
     @Data
     public static class SalaryInfo {
         public SalaryInfo(String name, Integer salary, Integer workingHour, Integer workingMin) {

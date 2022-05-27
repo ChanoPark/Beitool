@@ -1,11 +1,9 @@
 package com.beitool.beitool.api.service;
 
-import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto;
+import com.beitool.beitool.api.dto.*;
 import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto.*;
-import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
-import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
+import com.beitool.beitool.api.dto.SalaryCalEmployeeResponseDto.*;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto.WorkInfoResponse;
-import com.beitool.beitool.api.dto.ScheduleUpdateRequestDto;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
@@ -29,9 +27,11 @@ import java.util.List;
  * 4.근무 시프트 조회
  * 5.근무 시프트 삭제
  * 6.근무 시프트 수정
+ * 7.급여 계산기(사장)
+ * 8.급여 계산기(직원)
  * 
  * @author Chanos
- * @since 2022-04-18
+ * @since 2022-05-27
  */
 @Service
 @RequiredArgsConstructor
@@ -231,7 +231,7 @@ public class WorkService {
         int totalSalaryPerEmployee; //직원 별 급여 합계
         int workingHour;
         int workingMin;
-        long workingTime;
+        int workingTime;
 
         //각 직원 별 급여 계산
         for (Belong employee : employeeList) {
@@ -240,7 +240,7 @@ public class WorkService {
             //각 직원의 모든 근무 기록 조회
             List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryAtMonth(employee.getMember(), store, firstDateTime, lastDateTime);
 
-            //각 직원의 총 일한 시간 계산
+            //각 직원의 근로 시간 합계
             for (WorkInfo workInfo : workingTimes) {
                 workingTime += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
             }
@@ -251,8 +251,8 @@ public class WorkService {
                 workingMin = 0;
                 totalSalaryPerEmployee = 0;
             } else {
-                workingHour = (int) workingTime / 60; //근로 시간(시간)
-                workingMin = (int) workingTime % 60; //근로 시간(분)
+                workingHour = workingTime / 60; //근로 시간(시간)
+                workingMin = workingTime % 60; //근로 시간(분)
                 totalSalaryPerEmployee = (int) ( ( ((double) workingTime / 60.0) * salaryHour) ); //최종 급여 (분 단위 계산)
             }
             //결과 추가
@@ -270,4 +270,52 @@ public class WorkService {
         responseDto.setTotalInfo(totalSalary, totalWorkingHour, totalWorkingMin);
         return responseDto;
     }
+
+    /*8. 급여 계산기(직원)*/
+    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(Member member) {
+        SalaryCalEmployeeResponseDto responseDto = new SalaryCalEmployeeResponseDto();
+        Store store = member.getActiveStore();
+
+        //이번 달의 1일, 말일 구하기
+        LocalDate today = LocalDate.now(); //현재시간을 기준으로 1일, 말일 구함.
+        LocalDate firstDate = today.withDayOfMonth(1); //1일
+        LocalDate lastDate = today.withDayOfMonth(today.lengthOfMonth()); //말일
+        LocalTime zeroTime = LocalTime.of(0,0,0); //00시 00분 00초
+
+        LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
+        LocalDateTime lastDateTime = LocalDateTime.of(lastDate,zeroTime); //말일
+
+        //직원 정보 조회
+        Belong employee = belongWorkInfoRepository.findBelongInfo(member, store);
+
+        //각 직원의 모든 근무 기록 조회
+        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryAtMonth(employee.getMember(), store, firstDateTime, lastDateTime);
+
+        //각 직원의 근로 시간 합계
+        int salaryHour = employee.getSalaryHour();
+        int workingHour; //근로 시간(시간)
+        int workingMin;  //근로 시간(분)
+        int workingTime = 0; //근로 시간 합계
+        int totalSalary;
+
+        for (WorkInfo workInfo : workingTimes) {
+            workingTime += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
+            responseDto.addWorkingHistory(new WorkingHistory(workInfo.getWorkStartTime(), workInfo.getWorkEndTime()));
+        }
+
+        //아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
+        if (workingTime==0) {
+            workingHour = 0;
+            workingMin = 0;
+            totalSalary = 0;
+        } else {
+            workingHour = workingTime / 60; //근로 시간(시간)
+            workingMin = workingTime % 60; //근로 시간(분)
+            totalSalary = (int) ( ( ((double) workingTime / 60.0) * salaryHour) ); //최종 급여 (분 단위 계산)
+        }
+        responseDto.setInfo(totalSalary, workingHour, workingMin, salaryHour);
+
+        return responseDto;
+    }
+    //추후 리팩토링을 통해 급여 계산하는 메소드 따로 빼서 코드의 중복성을 줄이자.
 }

@@ -1,9 +1,6 @@
 package com.beitool.beitool.api.controller;
 
-import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto;
-import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
-import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
-import com.beitool.beitool.api.dto.ScheduleUpdateRequestDto;
+import com.beitool.beitool.api.dto.*;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.WorkService;
@@ -30,6 +27,7 @@ import java.util.Map;
  * 4.근무 시프트 삭제(캘린더)
  * 5.근무 시프트 수정(캘린더)
  * 6.급여 계산기(사장)
+ * 7.급여 계산기(직원)
  *
  * @since 2022-04-18
  * @author Chanos
@@ -90,6 +88,14 @@ public class WorkApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
         Member member = memberRepository.findOne(memberId);
         return workService.calculateSalaryForPresident(member);
+    }
+
+    /*7.급여 계산기(직원)*/
+    @PostMapping("/work/salary/employee/")
+    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody Map<String, String> param) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+        return workService.calculateSalaryForEmployee(member);
     }
 
     /*---------Inner DTO------------*/
