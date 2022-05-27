@@ -1,5 +1,7 @@
 package com.beitool.beitool.api.service;
 
+import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto;
+import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto.*;
 import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto.WorkInfoResponse;
@@ -15,9 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.NoResultException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -197,7 +198,76 @@ public class WorkService {
         LocalDateTime workStartTime = scheduleUpdateRequestDto.getWorkStartTime();
         LocalDateTime workEndTime = scheduleUpdateRequestDto.getWorkEndTime();
 
-        schedule.updateWorkSchedule(employee, author, workDay, workStartTime, workEndTime);
-        return new ResponseEntity("Update success", HttpStatus.ACCEPTED);
+        if (validateSchedule(workDay, workStartTime, workEndTime)) {
+            schedule.updateWorkSchedule(employee, author, workDay, workStartTime, workEndTime);
+            return new ResponseEntity("Success", HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /*7.급여 계산기(사장)*/
+    public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member) {
+        SalaryCalPresidentResponseDto responseDto = new SalaryCalPresidentResponseDto();
+
+        Store store = member.getActiveStore(); // 해당 가게 조회
+
+        //이번 달의 1일, 말일 구하기
+        LocalDate today = LocalDate.now(); //현재시간을 기준으로 1일, 말일 구함.
+        LocalDate firstDate = today.withDayOfMonth(1); //1일
+        LocalDate lastDate = today.withDayOfMonth(today.lengthOfMonth()); //말일
+        LocalTime zeroTime = LocalTime.of(0,0,0); //00시 00분 00초
+
+        LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
+        LocalDateTime lastDateTime = LocalDateTime.of(lastDate,zeroTime); //말일
+
+        //회원 목록 조회
+        List<Belong> employeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
+
+        //각 회원당 근무 기록 조회
+        int totalSalary = 0; //모든 직원의 급여 합계
+        int totalWorkingHour = 0; //모든 직원의 근로 시간(시간) 합계
+        int totalWorkingMin = 0 ; //모든 직원의 근로 시간(분) 합계
+        int totalSalaryPerEmployee; //직원 별 급여 합계
+        int workingHour;
+        int workingMin;
+        long workingTime;
+
+        //각 직원 별 급여 계산
+        for (Belong employee : employeeList) {
+            Integer salaryHour = employee.getSalaryHour(); //해당 가게에서 받는 시급 가져오기.
+            workingTime = 0;
+            //각 직원의 모든 근무 기록 조회
+            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryAtMonth(employee.getMember(), store, firstDateTime, lastDateTime);
+
+            //각 직원의 총 일한 시간 계산
+            for (WorkInfo workInfo : workingTimes) {
+                workingTime += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
+            }
+
+            //아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
+            if (workingTime==0) {
+                workingHour = 0;
+                workingMin = 0;
+                totalSalaryPerEmployee = 0;
+            } else {
+                workingHour = (int) workingTime / 60; //근로 시간(시간)
+                workingMin = (int) workingTime % 60; //근로 시간(분)
+                totalSalaryPerEmployee = (int) ( ( ((double) workingTime / 60.0) * salaryHour) ); //최종 급여 (분 단위 계산)
+            }
+            //결과 추가
+            totalSalary += totalSalaryPerEmployee;
+            totalWorkingHour += workingHour;
+            totalWorkingMin += workingMin;
+            SalaryInfo salaryInfo = new SalaryInfo(employee.getName(), totalSalaryPerEmployee, workingHour, workingMin);
+            responseDto.addInfo(salaryInfo);
+        }
+        //총 고용 시간의 분(Min) 부분이 60 이상일 경우, 시간으로 변환
+        if (totalWorkingMin >= 60) {
+            totalWorkingHour += totalWorkingMin/60;
+            totalWorkingMin = totalWorkingMin%60;
+        }
+        responseDto.setTotalInfo(totalSalary, totalWorkingHour, totalWorkingMin);
+        return responseDto;
     }
 }

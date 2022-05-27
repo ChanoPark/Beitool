@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.controller;
 
+import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto;
 import com.beitool.beitool.api.dto.ScheduleCreateRequestDto;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto;
 import com.beitool.beitool.api.dto.ScheduleUpdateRequestDto;
@@ -28,6 +29,7 @@ import java.util.Map;
  * 3.근무 시프트 조회(캘린더)
  * 4.근무 시프트 삭제(캘린더)
  * 5.근무 시프트 수정(캘린더)
+ * 6.급여 계산기(사장)
  *
  * @since 2022-04-18
  * @author Chanos
@@ -59,7 +61,7 @@ public class WorkApiController {
     public ScheduleReadResponseDto readSchedule(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
-        LocalDate day = scheduleReadRequestDto.getDay();
+        LocalDate day = scheduleReadRequestDto.getWorkDay();
         return workService.readSchedule(member, day);
     }
 
@@ -80,7 +82,14 @@ public class WorkApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleUpdateRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
         return workService.updateSchedule(member, scheduleUpdateRequestDto);
+    }
 
+    /*6.급여 계산기(사장)*/
+    @PostMapping("/work/salary/president/")
+    public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody Map<String, String> param) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+        return workService.calculateSalaryForPresident(member);
     }
 
     /*---------Inner DTO------------*/
@@ -108,6 +117,6 @@ public class WorkApiController {
 
         @JsonSerialize(using= LocalDateSerializer.class)
         @JsonDeserialize(using= LocalDateDeserializer.class)
-        private LocalDate day;
+        private LocalDate workDay;
     }
 }

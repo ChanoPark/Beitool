@@ -1,6 +1,7 @@
 package com.beitool.beitool.api.repository;
 
 import com.beitool.beitool.domain.*;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -23,11 +24,12 @@ import java.util.List;
  * 8.소속되어 있는 직원 목록 조회
  * 9.근무 시프트 작성
  * 10.이전 근무 조회(Validation)
- * 11.근무 기록 조회
+ * 11.근무 기록 조회(해당 날짜의 근무기록)
  * 12.배정된 근무 조회
  * 13.근무 예정 직원 찾기
  * 14.배정된 근무 삭제
  * 15.예정된 근무 조회(근무 시프트 수정)
+ * 16.월 별 근무 기록 조회(급여계산기)
  *
  * @author Chanos
  * @since 2022-05-25
@@ -114,7 +116,7 @@ public class BelongWorkInfoRepository {
                 .getResultList();
     }
 
-    /*11.근무 기록 조회*/
+    /*11.근무 기록 조회(해당 날짜의 근무기록)*/
     public List<WorkInfo> readScheduleHistory(Store store, LocalDate day) {
         return em.createQuery("select w from WorkInfo w where " +
                         "w.workDay=:workDay and w.store=:store order by w.workStartTime ASC", WorkInfo.class)
@@ -147,5 +149,16 @@ public class BelongWorkInfoRepository {
     /*15.예정된 근무 조회(근무 시프트 수정)*/
     public WorkSchedule findSchedule(Long postId) {
         return em.find(WorkSchedule.class, postId);
+    }
+
+    /*16.월 별 근무기록 조회*/
+    public List<WorkInfo> findWorkHistoryAtMonth(Member member, Store store, LocalDateTime firstDay, LocalDateTime lastDay){
+        return em.createQuery("select b from WorkInfo b where b.store=:store and b.member=:member " +
+                "and b.workStartTime between :firstDay AND :lastDay", WorkInfo.class)
+                .setParameter("member", member)
+                .setParameter("store", store)
+                .setParameter("firstDay", firstDay)
+                .setParameter("lastDay", lastDay)
+                .getResultList();
     }
 }

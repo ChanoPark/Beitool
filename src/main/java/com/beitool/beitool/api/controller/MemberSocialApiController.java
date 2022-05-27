@@ -33,7 +33,7 @@ public class MemberSocialApiController {
     private final StoreRepository storeRepository;
 
     /*로그인 후 엑세스토큰으로 회원 확인(신규/기존) */
-    @PostMapping("/login/kakao")
+    @PostMapping("/login/kakao/")
     public AuthorizationKakaoDto getKakaoToken(@RequestBody AuthorizationKakaoDto token) {
         try {
             kakaoApiService.getTokenInfo(token);
