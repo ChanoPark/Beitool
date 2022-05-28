@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.NoResultException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,6 +30,7 @@ import java.util.List;
  * 6.근무 시프트 수정
  * 7.급여 계산기(사장)
  * 8.급여 계산기(직원)
+ * 9.주휴 수당 계산
  * 
  * @author Chanos
  * @since 2022-05-27
@@ -206,7 +208,8 @@ public class WorkService {
         }
     }
 
-    /*7.급여 계산기(사장)*/
+
+    /*7.급여 계산기(사장)*/   //추후 리팩토링을 통해 급여 계산하는 메소드를 따로 빼서 코드의 중복성을 줄이자.
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member) {
         SalaryCalPresidentResponseDto responseDto = new SalaryCalPresidentResponseDto();
 
@@ -232,13 +235,15 @@ public class WorkService {
         int workingHour;
         int workingMin;
         int workingTime;
+        int holidayPay; //주휴수당
+        int totalHolidayPay = 0; //주휴수당 합계
 
         //각 직원 별 급여 계산
         for (Belong employee : employeeList) {
             Integer salaryHour = employee.getSalaryHour(); //해당 가게에서 받는 시급 가져오기.
             workingTime = 0;
             //각 직원의 모든 근무 기록 조회
-            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryAtMonth(employee.getMember(), store, firstDateTime, lastDateTime);
+            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
             //각 직원의 근로 시간 합계
             for (WorkInfo workInfo : workingTimes) {
@@ -259,7 +264,11 @@ public class WorkService {
             totalSalary += totalSalaryPerEmployee;
             totalWorkingHour += workingHour;
             totalWorkingMin += workingMin;
-            SalaryInfo salaryInfo = new SalaryInfo(employee.getName(), totalSalaryPerEmployee, workingHour, workingMin);
+            //주휴수당 계산
+            holidayPay = calculateHolidayPay(employee, firstDateTime, lastDateTime);
+            totalHolidayPay += holidayPay;
+
+            SalaryInfo salaryInfo = new SalaryInfo(employee.getName(), totalSalaryPerEmployee, workingHour, workingMin, holidayPay);
             responseDto.addInfo(salaryInfo);
         }
         //총 고용 시간의 분(Min) 부분이 60 이상일 경우, 시간으로 변환
@@ -267,7 +276,7 @@ public class WorkService {
             totalWorkingHour += totalWorkingMin/60;
             totalWorkingMin = totalWorkingMin%60;
         }
-        responseDto.setTotalInfo(totalSalary, totalWorkingHour, totalWorkingMin);
+        responseDto.setTotalInfo(totalSalary, totalWorkingHour, totalWorkingMin, totalHolidayPay);
         return responseDto;
     }
 
@@ -289,7 +298,7 @@ public class WorkService {
         Belong employee = belongWorkInfoRepository.findBelongInfo(member, store);
 
         //각 직원의 모든 근무 기록 조회
-        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryAtMonth(employee.getMember(), store, firstDateTime, lastDateTime);
+        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
         //각 직원의 근로 시간 합계
         int salaryHour = employee.getSalaryHour();
@@ -297,6 +306,7 @@ public class WorkService {
         int workingMin;  //근로 시간(분)
         int workingTime = 0; //근로 시간 합계
         int totalSalary;
+        int holidayPay; //주휴수당
 
         for (WorkInfo workInfo : workingTimes) {
             workingTime += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
@@ -313,9 +323,53 @@ public class WorkService {
             workingMin = workingTime % 60; //근로 시간(분)
             totalSalary = (int) ( ( ((double) workingTime / 60.0) * salaryHour) ); //최종 급여 (분 단위 계산)
         }
-        responseDto.setInfo(totalSalary, workingHour, workingMin, salaryHour);
+
+        //주휴수당 계산
+        holidayPay = calculateHolidayPay(employee, firstDateTime, lastDateTime);
+
+        responseDto.setInfo(totalSalary, workingHour, workingMin, salaryHour, holidayPay);
 
         return responseDto;
     }
-    //추후 리팩토링을 통해 급여 계산하는 메소드 따로 빼서 코드의 중복성을 줄이자.
+
+    /*9.주휴수당 계산*/
+    public int calculateHolidayPay(Belong employee, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
+        int workingTimeInWeek = 0; //주 근로 시간
+        int holidayPay = 0;
+        HashSet<LocalDate> workingDay = new HashSet<LocalDate>(); //근로 일수
+
+        LocalDateTime startWeek = firstDateTime;
+        LocalDateTime endWeek = startWeek.plusWeeks(1);
+
+        //일주일 근무 시간 및 주휴수당 계산 -> 월급, 주급 분리해서 볼 때 활용하면 코드 중복성을 낮출 수 있겠음.
+        while(endWeek.isBefore(lastDateTime)) {
+            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
+
+            for (WorkInfo workInfo : workingTimes) {
+                workingTimeInWeek += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
+                workingDay.add(workInfo.getWorkDay());
+            }
+            //주 근로 시간이 15시간 이상인 경우, 주휴수당 지급
+            if ((workingTimeInWeek/60) >= 15) {
+                holidayPay += ( (workingTimeInWeek/60.0) / workingDay.size() ) * employee.getSalaryHour();
+            }
+            workingTimeInWeek = 0;
+            startWeek = startWeek.plusWeeks(1);
+            endWeek = endWeek.plusWeeks(1);
+        }
+
+        startWeek = endWeek;
+        endWeek = lastDateTime;
+        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
+
+        for (WorkInfo workInfo : workingTimes) {
+            workingTimeInWeek += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
+        }
+        //주 근로 시간이 15시간 이상인 경우, 주휴수당 지급
+        if ((workingTimeInWeek/60) >= 15) {
+            holidayPay += ( (workingTimeInWeek/60.0) / workingDay.size() ) * employee.getSalaryHour();
+        }
+
+        return holidayPay;
+    }
 }

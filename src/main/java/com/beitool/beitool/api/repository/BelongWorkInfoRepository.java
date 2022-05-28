@@ -152,7 +152,7 @@ public class BelongWorkInfoRepository {
     }
 
     /*16.월 별 근무기록 조회*/
-    public List<WorkInfo> findWorkHistoryAtMonth(Member member, Store store, LocalDateTime firstDay, LocalDateTime lastDay){
+    public List<WorkInfo> findWorkHistoryPeriod(Member member, Store store, LocalDateTime firstDay, LocalDateTime lastDay){
         return em.createQuery("select b from WorkInfo b where b.store=:store and b.member=:member " +
                 "and b.workStartTime between :firstDay AND :lastDay", WorkInfo.class)
                 .setParameter("member", member)

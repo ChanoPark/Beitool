@@ -21,11 +21,12 @@ public class SalaryCalEmployeeResponseDto {
     public SalaryCalEmployeeResponseDto() { this.workingHistories = new ArrayList<>(); }
 
     //Constructor
-    public void setInfo(Integer totalSalary, Integer workingHour, Integer workingMin, Integer salaryHour) {
+    public void setInfo(Integer totalSalary, Integer workingHour, Integer workingMin, Integer salaryHour, Integer holidayPay) {
         this.totalSalary = totalSalary;
         this.workingHour = workingHour;
         this.workingMin = workingMin;
         this.salaryHour = salaryHour;
+        this.holidayPay = holidayPay;
     }
     
     //근무 기록 추가
@@ -34,6 +35,7 @@ public class SalaryCalEmployeeResponseDto {
     }
 
     private Integer totalSalary; //급여 합계
+    private Integer holidayPay; //주휴수당
 
     private Integer workingHour; //근로 시간(시간) 합계
     private Integer workingMin;  //근로 시간(분) 합계
@@ -41,6 +43,8 @@ public class SalaryCalEmployeeResponseDto {
     private Integer salaryHour; //시급
     
     private List<WorkingHistory> workingHistories; //근로 기록
+
+
 
     @Data @AllArgsConstructor
     public static class WorkingHistory {
