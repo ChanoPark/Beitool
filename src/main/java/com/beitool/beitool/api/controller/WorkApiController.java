@@ -85,16 +85,18 @@ public class WorkApiController {
     /*6.급여 계산기(사장)*/
     @PostMapping("/work/salary/president/")
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody Map<String, String> param) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
-        Member member = memberRepository.findOne(memberId);
+//        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+//        Member member = memberRepository.findOne(memberId);
+        Member member = memberRepository.findByRefreshToken(param.get("accessToken"));
         return workService.calculateSalaryForPresident(member);
     }
 
     /*7.급여 계산기(직원)*/
     @PostMapping("/work/salary/employee/")
     public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody Map<String, String> param) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
-        Member member = memberRepository.findOne(memberId);
+//        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+//        Member member = memberRepository.findOne(memberId);
+        Member member = memberRepository.findByRefreshToken(param.get("accessToken"));
         return workService.calculateSalaryForEmployee(member);
     }
 

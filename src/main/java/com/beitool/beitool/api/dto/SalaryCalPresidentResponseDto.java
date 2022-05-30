@@ -20,17 +20,22 @@ public class SalaryCalPresidentResponseDto {
         this.salaryInfos.add(salaryInfo);
     }
     /*총계 추가*/
-    public void setTotalInfo(Integer totalSalary, Integer totalWorkingHour, Integer totalWorkingMin, Integer totalHolidayPay) {
+    public void setTotalInfo(Integer totalSalary, Integer totalWorkingHour, Integer totalWorkingMin,
+                             Integer totalHolidayPay, Integer employeeNum, Integer totalInsurance) {
         this.totalSalary = totalSalary;
         this.totalWorkingHour = totalWorkingHour;
         this.totalWorkingMin = totalWorkingMin;
         this.totalHolidayPay = totalHolidayPay;
+        this.employeeNum = employeeNum;
+        this.totalInsurance = totalInsurance;
     }
 
+    Integer employeeNum; // 고용 인원
     Integer totalSalary; // 모든 직원의 급여 합계
     Integer totalWorkingHour; //모든 직원의 근로 시간(시간)
     Integer totalWorkingMin;  //모든 직원의 근로 시간(분)
     Integer totalHolidayPay; //주휴수당 합계
+    Integer totalInsurance; //4대보험 합계
 
     List<SalaryInfo> salaryInfos;
     @Data
