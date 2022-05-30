@@ -19,7 +19,13 @@ import java.util.Map;
  */
 @Data
 public class SalaryCalEmployeeResponseDto {
-    public SalaryCalEmployeeResponseDto() { this.workingHistories = new ArrayList<>(); }
+    public SalaryCalEmployeeResponseDto() {
+        this.workingHistories = new ArrayList<>();
+        this.message = "Success";
+    }
+    public SalaryCalEmployeeResponseDto(String message) {
+        this.message = message;
+    }
 
     //Constructor
     public void setInfo(Integer totalSalary, Integer workingHour, Integer workingMin, Integer salaryHour,
@@ -37,6 +43,7 @@ public class SalaryCalEmployeeResponseDto {
         this.workingHistories.add(workingHistory);
     }
 
+    private String message;
     private Integer totalSalary; //급여 합계
     private Integer holidayPay; //주휴수당
     private Map<String, Integer> insurance; //4대보험

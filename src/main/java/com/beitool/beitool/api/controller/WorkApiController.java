@@ -16,7 +16,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.persistence.NoResultException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -84,20 +88,59 @@ public class WorkApiController {
 
     /*6.급여 계산기(사장)*/
     @PostMapping("/work/salary/president/")
-    public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody Map<String, String> param) {
-//        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
-//        Member member = memberRepository.findOne(memberId);
-        Member member = memberRepository.findByRefreshToken(param.get("accessToken"));
-        return workService.calculateSalaryForPresident(member);
+    public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(salaryCalRequestDTO.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+
+        String isMonthOrWeek = salaryCalRequestDTO.getIsMonthOrWeek();
+        LocalDate requestTime = salaryCalRequestDTO.getRequestTime();
+
+        LocalDate firstDate = requestTime.withDayOfMonth(1); //1일
+        LocalDate lastDate = requestTime.withDayOfMonth(requestTime.lengthOfMonth()); //말일
+        LocalTime zeroTime = LocalTime.of(0, 0, 0); //00시 00분 00초
+
+        LocalDateTime firstDateTime;
+        LocalDateTime lastDateTime;
+
+        if (isMonthOrWeek.equals("Month")) {
+            firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
+            lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
+            return workService.calculateSalaryForPresident(member, firstDateTime, lastDateTime);
+        } else if (isMonthOrWeek.equals("Week")) {
+            Integer countWeek = salaryCalRequestDTO.getCountWeek() - 1;
+            firstDateTime = LocalDateTime.of(firstDate, zeroTime).plusWeeks(countWeek);
+            lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서
+            return workService.calculateSalaryForPresident(member, firstDateTime, lastDateTime);
+        }
+        return new SalaryCalPresidentResponseDto("Failed");
     }
 
     /*7.급여 계산기(직원)*/
     @PostMapping("/work/salary/employee/")
-    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody Map<String, String> param) {
-//        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
-//        Member member = memberRepository.findOne(memberId);
-        Member member = memberRepository.findByRefreshToken(param.get("accessToken"));
-        return workService.calculateSalaryForEmployee(member);
+    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
+        Member member = memberRepository.findByRefreshToken(salaryCalRequestDTO.getAccessToken());
+
+        String isMonthOrWeek = salaryCalRequestDTO.getIsMonthOrWeek();
+        LocalDate requestTime = salaryCalRequestDTO.getRequestTime();
+
+        LocalDate firstDate = requestTime.withDayOfMonth(1); //1일
+        LocalDate lastDate = requestTime.withDayOfMonth(requestTime.lengthOfMonth()); //말일
+        LocalTime zeroTime = LocalTime.of(0, 0, 0); //00시 00분 00초
+
+        LocalDateTime firstDateTime;
+        LocalDateTime lastDateTime;
+
+        if (isMonthOrWeek.equals("Month")) {
+            firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
+            lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
+            return workService.calculateSalaryForEmployee(member, firstDateTime, lastDateTime);
+        } else if (isMonthOrWeek.equals("Week")) {
+            Integer countWeek = salaryCalRequestDTO.getCountWeek() - 1;
+            firstDateTime = LocalDateTime.of(firstDate, zeroTime).plusWeeks(countWeek);
+            lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서
+            return workService.calculateSalaryForEmployee(member, firstDateTime, lastDateTime);
+        }
+        return new SalaryCalEmployeeResponseDto("Failed");
     }
 
     /*---------Inner DTO------------*/

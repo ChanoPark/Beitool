@@ -13,7 +13,11 @@ import java.util.List;
 @Data
 public class SalaryCalPresidentResponseDto {
 
-    public SalaryCalPresidentResponseDto() { this.salaryInfos = new ArrayList<>(); }
+    public SalaryCalPresidentResponseDto() {
+        this.salaryInfos = new ArrayList<>();
+        this.message = "Success";
+    }
+    public SalaryCalPresidentResponseDto(String message) { this.message = message; }
 
     /*정보 추가*/
     public void addInfo(SalaryInfo salaryInfo) {
@@ -30,6 +34,7 @@ public class SalaryCalPresidentResponseDto {
         this.totalInsurance = totalInsurance;
     }
 
+    String message;
     Integer employeeNum; // 고용 인원
     Integer totalSalary; // 모든 직원의 급여 합계
     Integer totalWorkingHour; //모든 직원의 근로 시간(시간)

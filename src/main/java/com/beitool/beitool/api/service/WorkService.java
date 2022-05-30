@@ -211,21 +211,12 @@ public class WorkService {
         }
     }
 
-
     /*7.급여 계산기(사장)*/   //추후 리팩토링을 통해 급여 계산하는 메소드를 따로 빼서 코드의 중복성을 줄이자.
-    public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member) {
+    public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
         SalaryCalPresidentResponseDto responseDto = new SalaryCalPresidentResponseDto();
 
-        Store store = member.getActiveStore(); // 해당 가게 조회
-
-        //이번 달의 1일, 말일 구하기
-        LocalDate today = LocalDate.now(); //현재시간을 기준으로 1일, 말일 구함.
-        LocalDate firstDate = today.withDayOfMonth(1); //1일
-        LocalDate lastDate = today.withDayOfMonth(today.lengthOfMonth()); //말일
-        LocalTime zeroTime = LocalTime.of(0, 0, 0); //00시 00분 00초
-
-        LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
-        LocalDateTime lastDateTime = LocalDateTime.of(lastDate, zeroTime); //말일
+        // 해당 가게 조회
+        Store store = member.getActiveStore();
 
         //회원 목록 조회
         List<Belong> employeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
@@ -235,9 +226,9 @@ public class WorkService {
         int totalWorkingHour = 0; //모든 직원의 근로 시간(시간) 합계
         int totalWorkingMin = 0; //모든 직원의 근로 시간(분) 합계
         int totalSalaryPerEmployee; //직원 별 급여 합계
-        int workingHour;
-        int workingMin;
-        int workingTime;
+        int workingHour; // 근로 시간(시간)
+        int workingMin; // 근로 시간(분)
+        int workingTime; // 계산용 총 근로 시간(분 단위 계산)
         int holidayPay; //주휴수당
         int totalHolidayPay = 0; //주휴수당 합계
         int totalInsurance = 0; //4대보험 합계
@@ -250,21 +241,16 @@ public class WorkService {
             //각 직원의 모든 근무 기록 조회
             List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
-            //각 직원의 근로 시간 합계
+            //각 직원의 근로 시간 합계 계산
             for (WorkInfo workInfo : workingTimes) {
                 workingTime += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
             }
 
-            //아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
-            if (workingTime == 0) {
-                workingHour = 0;
-                workingMin = 0;
-                totalSalaryPerEmployee = 0;
-            } else {
-                workingHour = workingTime / 60; //근로 시간(시간)
-                workingMin = workingTime % 60; //근로 시간(분)
-                totalSalaryPerEmployee = (int) ((((double) workingTime / 60.0) * salaryHour)); //최종 급여 (분 단위 계산)
-            }
+            //근로 시간 합계, 급여 합계 구하기 -> 아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
+            workingHour = workingTime / 60; //근로 시간(시간)
+            workingMin = workingTime % 60; //근로 시간(분)
+            totalSalaryPerEmployee = (int) ((((double) workingTime / 60.0) * salaryHour)); //최종 급여 (분 단위 계산)
+
             //결과 추가
             totalSalary += totalSalaryPerEmployee;
             totalWorkingHour += workingHour;
@@ -297,18 +283,10 @@ public class WorkService {
     }
 
     /*8. 급여 계산기(직원)*/
-    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(Member member) {
+    public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(Member member, LocalDateTime firstDateTime,
+                                                                   LocalDateTime lastDateTime) {
         SalaryCalEmployeeResponseDto responseDto = new SalaryCalEmployeeResponseDto();
         Store store = member.getActiveStore();
-
-        //이번 달의 1일, 말일 구하기
-        LocalDate today = LocalDate.now(); //현재시간을 기준으로 1일, 말일 구함.
-        LocalDate firstDate = today.withDayOfMonth(1); //1일
-        LocalDate lastDate = today.withDayOfMonth(today.lengthOfMonth()); //말일
-        LocalTime zeroTime = LocalTime.of(0, 0, 0); //00시 00분 00초
-
-        LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
-        LocalDateTime lastDateTime = LocalDateTime.of(lastDate, zeroTime); //말일
 
         //직원 정보 조회
         Belong employee = belongWorkInfoRepository.findBelongInfo(member, store);
@@ -330,16 +308,10 @@ public class WorkService {
             responseDto.addWorkingHistory(new WorkingHistory(workInfo.getWorkStartTime(), workInfo.getWorkEndTime()));
         }
 
-        //아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
-        if (workingTime == 0) {
-            workingHour = 0;
-            workingMin = 0;
-            totalSalary = 0;
-        } else {
-            workingHour = workingTime / 60; //근로 시간(시간)
-            workingMin = workingTime % 60; //근로 시간(분)
-            totalSalary = (int) ((((double) workingTime / 60.0) * salaryHour)); //최종 급여 (분 단위 계산)
-        }
+        //근로 시간 합계, 급여 합계 구하기 -> 아직 이번 달에 일을 안했을 경우, 0을 반환해야 한다.
+        workingHour = workingTime / 60; //근로 시간(시간)
+        workingMin = workingTime % 60; //근로 시간(분)
+        totalSalary = (int) ((((double) workingTime / 60.0) * salaryHour)); //최종 급여 (분 단위 계산)
 
         //주휴수당 계산
         holidayPay = calculateHolidayPay(employee, firstDateTime, lastDateTime);
