@@ -51,7 +51,7 @@ public class AmazonS3Service {
 
         Map<String, String> fileInfo = new HashMap<>();
         fileInfo.put("fileName", fileName);
-        fileInfo.put("filePath", filePath+fileName);
+        fileInfo.put("filePath", "https://"+filePath+fileName);
 
         return fileInfo;
     }

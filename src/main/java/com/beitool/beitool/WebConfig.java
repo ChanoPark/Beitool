@@ -34,4 +34,5 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public ObjectMapper objectMapper() {return new ObjectMapper();}
+
 }

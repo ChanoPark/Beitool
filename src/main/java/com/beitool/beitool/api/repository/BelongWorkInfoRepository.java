@@ -1,7 +1,6 @@
 package com.beitool.beitool.api.repository;
 
 import com.beitool.beitool.domain.*;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -29,7 +28,7 @@ import java.util.List;
  * 13.근무 예정 직원 찾기
  * 14.배정된 근무 삭제
  * 15.예정된 근무 조회(근무 시프트 수정)
- * 16.월 별 근무 기록 조회(급여계산기)
+ * 16.일정 기간 근무 기록 조회(급여계산기)
  *
  * @author Chanos
  * @since 2022-05-25
@@ -151,11 +150,22 @@ public class BelongWorkInfoRepository {
         return em.find(WorkSchedule.class, postId);
     }
 
-    /*16.월 별 근무기록 조회*/
+    /*16.일정 기간 근무기록 조회*/
     public List<WorkInfo> findWorkHistoryPeriod(Member member, Store store, LocalDateTime firstDay, LocalDateTime lastDay){
         return em.createQuery("select b from WorkInfo b where b.store=:store and b.member=:member " +
                 "and b.workStartTime between :firstDay AND :lastDay", WorkInfo.class)
                 .setParameter("member", member)
+                .setParameter("store", store)
+                .setParameter("firstDay", firstDay)
+                .setParameter("lastDay", lastDay)
+                .getResultList();
+    }
+
+    /*17.일정 기간 근무예정 조회*/
+    public List<WorkSchedule> findWorkFuturePeriod(Member employee, Store store, LocalDateTime firstDay, LocalDateTime lastDay){
+        return em.createQuery("select s from WorkSchedule s where s.store=:store and s.employee=:employee " +
+                        "and s.workStartTime between :firstDay AND :lastDay", WorkSchedule.class)
+                .setParameter("employee", employee)
                 .setParameter("store", store)
                 .setParameter("firstDay", firstDay)
                 .setParameter("lastDay", lastDay)

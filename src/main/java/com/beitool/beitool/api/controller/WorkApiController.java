@@ -1,10 +1,13 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.*;
+import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.WorkService;
-import com.beitool.beitool.domain.Member;
+import com.beitool.beitool.domain.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -16,22 +19,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 회원 근로와 관련된 컨트롤러
  * 1.출퇴근
- * 2.근무 시프트 작성(캘린더)
- * 3.근무 시프트 조회(캘린더)
- * 4.근무 시프트 삭제(캘린더)
- * 5.근무 시프트 수정(캘린더)
- * 6.급여 계산기(사장)
- * 7.급여 계산기(직원)
+ * 2.캘린더 일정 작성
+ * 3.캘린더 한달 일정 조회
+ * 4.캘린더 하루 일정 조회
+ * 5.캘린더 일정 삭제
+ * 6.캘린더 일정 수정
+ * 7.급여 계산기(사장)
+ * 8.급여 계산기(직원)
  *
  * @since 2022-04-18
  * @author Chanos
@@ -50,7 +52,7 @@ public class WorkApiController {
         return new CommuteResponseDto(workService.workCommute(isWorking, commuteRequestDto.getAccessToken()));
     }
 
-    /*2.근무 시프트 작성*/
+    /*2.캘린더 일정 작성*/
     @PostMapping("/work/create/schedule/")
     public ResponseEntity createSchedule(@RequestBody ScheduleCreateRequestDto scheduleCreateRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleCreateRequestDto.getAccessToken());
@@ -58,7 +60,24 @@ public class WorkApiController {
         return workService.createSchedule(member, scheduleCreateRequestDto);
     }
 
-    /*3.근무 시프트 조회*/
+    /*3.캘린더 한달 일정 조회*/
+    @PostMapping("/work/read/schedule/monthly/")
+    public ScheduleReadResponseDto readScheduleMonthly(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        LocalDate requestTime = scheduleReadRequestDto.getWorkDay();
+
+        LocalDate firstDate = requestTime.withDayOfMonth(1); //1일
+        LocalDate lastDate = requestTime.withDayOfMonth(requestTime.lengthOfMonth()); //말일
+        LocalTime zeroTime = LocalTime.of(0, 0, 0); //00시 00분 00초
+
+        LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
+        LocalDateTime lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
+
+        return workService.readScheduleMonthly(member, firstDateTime, lastDateTime);
+    }
+
+    /*4.캘린더 하루 일정 조회*/
     @PostMapping("/work/read/schedule/")
     public ScheduleReadResponseDto readSchedule(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
@@ -67,7 +86,7 @@ public class WorkApiController {
         return workService.readSchedule(member, day);
     }
 
-    /*4.근무 시프트 삭제*/
+    /*5.캘린더 일정 삭제*/
     @PostMapping("/work/delete/schedule/")
     public ResponseEntity deleteSchedule(@RequestBody Map<String, String> param) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
@@ -78,7 +97,7 @@ public class WorkApiController {
         return workService.deleteSchedule(member, postId);
     }
 
-    /*5.근무 시프트 수정*/
+    /*6.캘린더 일정 수정*/
     @PostMapping("/work/update/schedule/")
     public ResponseEntity updateSchedule(@RequestBody ScheduleUpdateRequestDto scheduleUpdateRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleUpdateRequestDto.getAccessToken());
@@ -86,7 +105,7 @@ public class WorkApiController {
         return workService.updateSchedule(member, scheduleUpdateRequestDto);
     }
 
-    /*6.급여 계산기(사장)*/
+    /*7.급여 계산기(사장)*/
     @PostMapping("/work/salary/president/")
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(salaryCalRequestDTO.getAccessToken());
@@ -115,7 +134,7 @@ public class WorkApiController {
         return new SalaryCalPresidentResponseDto("Failed");
     }
 
-    /*7.급여 계산기(직원)*/
+    /*8.급여 계산기(직원)*/
     @PostMapping("/work/salary/employee/")
     public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
         Member member = memberRepository.findByRefreshToken(salaryCalRequestDTO.getAccessToken());
@@ -169,5 +188,14 @@ public class WorkApiController {
         @JsonSerialize(using= LocalDateSerializer.class)
         @JsonDeserialize(using= LocalDateDeserializer.class)
         private LocalDate workDay;
+    }
+
+    @Data
+    static public class ReadScheduleMonthlyDto {
+        String accessToken;
+
+        @JsonSerialize(using= LocalDateSerializer.class)
+        @JsonDeserialize(using= LocalDateDeserializer.class)
+        LocalDate goalDay;
     }
 }

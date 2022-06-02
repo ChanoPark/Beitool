@@ -18,18 +18,18 @@ import javax.persistence.NoResultException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 근로와 관련된 서비스
  * 1.출퇴근
- * 2.근무 시프트 작성
- * 3.근무 시프트 작성시 유효성 검사
- * 4.근무 시프트 조회
- * 5.근무 시프트 삭제
- * 6.근무 시프트 수정
+ * 2.캘린더 일정 작성
+ * 3.캘린더 일정 작성시 유효성 검사
+ * 3.캘린더 일정 한달 조회
+ * 4.캘린더 일정 하루 조회
+ * 5.캘린더 일정 삭제
+ * 6.캘린더 일정 수정
  * 7.급여 계산기(사장)
  * 8.급여 계산기(직원)
  * 9.주휴 수당 계산
@@ -83,7 +83,7 @@ public class WorkService {
         return result;
     }
 
-    /*2.근무 시프트 작성*/
+    /*2.캘린더 일정 작성*/
     public ResponseEntity createSchedule(Member member, ScheduleCreateRequestDto scheduleCreateRequestDto) {
         Store store = member.getActiveStore();
         Long employeeId = scheduleCreateRequestDto.getEmployee();
@@ -102,7 +102,7 @@ public class WorkService {
         }
     }
 
-    /*3.근무시프트 작성시 Validation*/
+    /*3.캘린더 일정 작성시 Validation*/
     public boolean validateSchedule(LocalDate workDay, LocalDateTime workStartTime, LocalDateTime workEndTime) {
         //퇴근 시간이 출근 시간보다 이르면 불가능
         if (workStartTime.isAfter(workEndTime))
@@ -148,7 +148,34 @@ public class WorkService {
         return true;
     }
 
-    /*4.근무 시프트 조회*/
+    /*4.캘린더 일정 한달 조회*/
+    public ScheduleReadResponseDto readScheduleMonthly(Member member, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
+        ScheduleReadResponseDto scheduleReadResponseDto = new ScheduleReadResponseDto();
+        Store store = member.getActiveStore();
+        LocalDateTime today = LocalDateTime.now();
+
+        //1일 ~ 오늘 : 근무 기록
+        List<WorkInfo> workInfos = belongWorkInfoRepository.findWorkHistoryPeriod(member, store, firstDateTime, today);
+        for (WorkInfo workInfo : workInfos) {
+            String name = belongWorkInfoRepository.findBelongInfo(workInfo.getMember(), store).getName();
+            Long postId = workInfo.getId();
+            WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime(), workInfo.getWorkDay());
+            scheduleReadResponseDto.setWorkInfos(workInfoResponse);
+        }
+
+        //오늘 ~ 말일 : 근무 예정
+        List<WorkSchedule> workSchedules = belongWorkInfoRepository.findWorkFuturePeriod(member, store, today, lastDateTime);
+        for (WorkSchedule workSchedule : workSchedules) {
+            String name = belongWorkInfoRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
+            String author = belongWorkInfoRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
+            Long postId = workSchedule.getId();
+            WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, author, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
+            scheduleReadResponseDto.setWorkInfos(workInfoResponse);
+        }
+
+        return scheduleReadResponseDto;
+    }
+    /*5.캘린더 일정 하루 조회*/
     public ScheduleReadResponseDto readSchedule(Member member, LocalDate day) {
         ScheduleReadResponseDto scheduleReadResponseDto = new ScheduleReadResponseDto();
         Store store = member.getActiveStore();
@@ -160,7 +187,7 @@ public class WorkService {
             for (WorkInfo workInfo : workInfos) {
                 String name = belongWorkInfoRepository.findBelongInfo(workInfo.getMember(), store).getName();
                 Long postId = workInfo.getId();
-                WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
+                WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime(), workInfo.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
             }
         } else { //오늘 포함 이후의 날짜를 선택하면 배정되어 있는 근무를 반환함.
@@ -169,14 +196,14 @@ public class WorkService {
                 String employeeName = belongWorkInfoRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
                 String authorName = belongWorkInfoRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
                 Long postId = workSchedule.getId();
-                WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, employeeName, authorName, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime());
+                WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, employeeName, authorName, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
             }
         }
         return scheduleReadResponseDto;
     }
 
-    /*5.근무 시프트 삭제*/
+    /*6.캘린더 일정 삭제*/
     public ResponseEntity deleteSchedule(Member member, Long postId) {
         Store store = member.getActiveStore();
         Belong belongInfo = belongWorkInfoRepository.findBelongInfo(member, store);
@@ -190,7 +217,7 @@ public class WorkService {
         return new ResponseEntity("Delete Failed", HttpStatus.BAD_REQUEST);
     }
 
-    /*6.근무 시프트 수정*/
+    /*7.캘린더 일정 수정*/
     @Transactional
     public ResponseEntity updateSchedule(Member author, ScheduleUpdateRequestDto scheduleUpdateRequestDto) {
         Long postId = scheduleUpdateRequestDto.getId();
@@ -211,7 +238,7 @@ public class WorkService {
         }
     }
 
-    /*7.급여 계산기(사장)*/   //추후 리팩토링을 통해 급여 계산하는 메소드를 따로 빼서 코드의 중복성을 줄이자.
+    /*8.급여 계산기(사장)*/   //추후 리팩토링을 통해 급여 계산하는 메소드를 따로 빼서 코드의 중복성을 줄이자.
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
         SalaryCalPresidentResponseDto responseDto = new SalaryCalPresidentResponseDto();
 
@@ -282,7 +309,7 @@ public class WorkService {
         return responseDto;
     }
 
-    /*8. 급여 계산기(직원)*/
+    /*9. 급여 계산기(직원)*/
     public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(Member member, LocalDateTime firstDateTime,
                                                                    LocalDateTime lastDateTime) {
         SalaryCalEmployeeResponseDto responseDto = new SalaryCalEmployeeResponseDto();
@@ -331,7 +358,7 @@ public class WorkService {
         return responseDto;
     }
 
-    /*9.주휴수당 계산*/
+    /*10.주휴수당 계산*/
     public int calculateHolidayPay(Belong employee, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
         int workingTimeInWeek = 0; //주 근로 시간
         int holidayPay = 0;
@@ -370,7 +397,7 @@ public class WorkService {
         return holidayPay;
     }
 
-    /*10.4대 보험 계산 */ //산재 보험 제외
+    /*11.4대 보험 계산 */ //산재 보험 제외
     public Map<String, Integer> calculateInsurance(int salary) {
         Map<String, Integer> insurance = new HashMap<>();
 
