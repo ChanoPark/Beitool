@@ -6,12 +6,7 @@ import com.beitool.beitool.api.repository.BoardRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.*;
 import com.beitool.beitool.domain.board.*;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.jni.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,8 +50,8 @@ public class BoardServiceImpl {
     private final MemberRepository memberRepository;
     private final BelongWorkInfoRepository belongWorkInfoRepository;
 
-    /***--게시글 목록 조회--***/
-    /*부모 클래스인 BoardDomain 조회*/
+    /***--1.게시글 목록 조회--***/
+    /*1-1.부모 클래스인 BoardDomain 조회*/
     public BoardResponseDto readBoard(Member member, String boardType, Integer page) {
         Store store = member.getActiveStore();
 
@@ -74,37 +69,48 @@ public class BoardServiceImpl {
         return boardResponseDto;
     }
 
-    /*ToDoList 게시글 조회*/
-    public ToDoListResponseDto readToDoList(Store store) {
+    /*1-2.ToDoList 게시글 조회*/
+    public ToDoListResponseDto readToDoList(Member member, Store store) {
         ToDoListResponseDto toDoListResponseDto = new ToDoListResponseDto();
-        try {
-            List<ToDoList> toDoLists = boardRepository.readToDoListPost(store);
-            for (ToDoList findPost : toDoLists) {
-                Long id = findPost.getId();
-                String title = findPost.getTitle();
-                boolean isClear = findPost.isClear();
-                LocalDate jobDate = findPost.getJobDate();
+        Belong belong = belongWorkInfoRepository.findBelongInfo(member, store);
 
-                Member employee = findPost.getEmployee();
-                String employeeName = belongWorkInfoRepository.findBelongInfo(employee, store).getName();
-                toDoListResponseDto.addPost(id, title, employeeName, isClear, jobDate);
+        List<ToDoList> toDoLists;
+
+        try { //사장이면 전체 조회
+            if (belong.getPosition() == MemberPosition.President) {
+                toDoLists = boardRepository.readToDoListPost(store);
+            } else { //직원이면 자기껏만 조회
+                System.out.println("???????????????????????????????????????????");
+                toDoLists = boardRepository.readToDoListPost(member, store);
             }
-            toDoListResponseDto.setMessage("Success");
-
-            //마감일 기준으로 정렬(오름차순)
-            Collections.sort(toDoLists, new ToDoListComparator());
-
         } catch (NoResultException e) {
             return new ToDoListResponseDto("Failed");
         }
 
+        for (ToDoList findPost : toDoLists) {
+            Long id = findPost.getId();
+            String title = findPost.getTitle();
+            boolean isClear = findPost.isClear();
+            LocalDate jobDate = findPost.getJobDate();
+
+            Member employee = findPost.getEmployee();
+            String employeeName = belongWorkInfoRepository.findBelongInfo(employee, store).getName();
+            toDoListResponseDto.addPost(id, title, employeeName, isClear, jobDate);
+        }
+        toDoListResponseDto.setMessage("Success");
+
+        //마감일 기준으로 정렬(오름차순)
+        Collections.sort(toDoLists, new ToDoListComparator());
+
         return toDoListResponseDto;
     }
 
-    /*재고관리 게시글 목록 조회*/
+    /*1-3.재고관리 게시글 목록 조회*/
     public StockReadResponseDto readStockListBoard(Store store) {
         StockReadResponseDto stockReadResponseDto = new StockReadResponseDto();
+
         List<Stock> stockPosts = boardRepository.readStockPost(store);
+
         for (Stock post : stockPosts) {
             Long id = post.getId();
             String title = post.getTitle();
@@ -118,8 +124,8 @@ public class BoardServiceImpl {
         return stockReadResponseDto;
     }
 
-    /***--게시글 작성--***/
-    /*공지사항 작성*/
+    /***--2.게시글 작성--***/
+    /*2-1.공지사항 작성*/
     public PostDetailResponseDto createAnnouncementPost(Member member, Belong belongInfo, BoardRequestDto boardRequestDto) {
         Store store = member.getActiveStore();
         String authorName = belongInfo.getName();
@@ -132,7 +138,7 @@ public class BoardServiceImpl {
         return new PostDetailResponseDto(title, content, postId, authorName, createdTime, "Success");
     }
 
-    /*자유게시판 작성*/
+    /*2-2.자유게시판 작성*/
     public PostDetailResponseDto createFreePost(Member member, Belong belongInfo, BoardRequestDto boardRequestDto) {
         Store store = member.getActiveStore();
         String authorName = belongInfo.getName();
@@ -145,7 +151,7 @@ public class BoardServiceImpl {
         return new PostDetailResponseDto(title, content, postId, authorName, createdTime, "Success");
     }
 
-    /*ToDoList 작성*/
+    /*2-3.ToDoList 작성*/
     public ToDoListResponseDto createToDoPost(Member author, Belong belongInfo, ToDoListRequestDto toDoListRequestDto) {
         Store store = author.getActiveStore();
         String authorName = belongInfo.getName();
@@ -161,10 +167,10 @@ public class BoardServiceImpl {
         ToDoList toDoList = new ToDoList(authorName, createdTime, author, store, title, jobDate, employee);
 
         boardRepository.createPost(toDoList);
-        return readToDoList(store);
+        return readToDoList(author, store);
     }
 
-    /*재고관리 작성*/
+    /*2-4.재고관리 작성*/
     public StockResponseDto createStockPost(StockRequestDto stockRequestDto, Member member) {
         String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName(); //작성자
         String productName = stockRequestDto.getProductName(); //상품명(부모 테이블의 제목에 들어감)
@@ -188,8 +194,8 @@ public class BoardServiceImpl {
     }
 
 
-    /***--게시글 조회--***/
-    /*공지사항 게시글 조회*/
+    /***--3.게시글 조회--***/
+    /*3-1.공지사항 게시글 조회*/
     public PostDetailResponseDto readAnnouncementPost(Long postId) {
         Announcement findPost = new Announcement();
         try {
@@ -202,7 +208,7 @@ public class BoardServiceImpl {
         }
     }
 
-    /*자유게시판 게시글 조회*/
+    /*3-2.자유게시판 게시글 조회*/
     public PostDetailResponseDto readFreePost(Long postId) {
         Free findPost = new Free();
         try {
@@ -215,7 +221,7 @@ public class BoardServiceImpl {
         }
     }
 
-    /*재고관리 게시글 조회*/
+    /*3-3.재고관리 게시글 조회*/
     public StockResponseDto readStockPost(Long postId) {
         Stock findPost = new Stock();
         try {
@@ -236,7 +242,7 @@ public class BoardServiceImpl {
         }
     }
 
-    /***--게시글 삭제--***/
+    /***--4.게시글 삭제--***/
     public String deletePost(Member member, Long id, String boardType) {
         Member author = boardRepository.findAuthor(id);
 
@@ -255,8 +261,8 @@ public class BoardServiceImpl {
         //없는 게시글 삭제 요청이 들어올수가있나 근데?
     }
 
-    /***--게시글 수정--***/
-    /*공지사항 수정*/
+    /***--5.게시글 수정--***/
+    /*5-1.공지사항 수정*/
     @Transactional
     public PostDetailResponseDto updateAnnouncementPost(Member member, BoardRequestDto boardRequestDto) {
         Member author = boardRepository.findAuthor(boardRequestDto.getId());
@@ -275,7 +281,7 @@ public class BoardServiceImpl {
         }
     }
 
-    /*자유게시판 수정*/
+    /*5-2.자유게시판 수정*/
     @Transactional
     public PostDetailResponseDto updateFreePost(Member member, BoardRequestDto boardRequestDto) {
         Member author = boardRepository.findAuthor(boardRequestDto.getId());
@@ -294,7 +300,7 @@ public class BoardServiceImpl {
         }
     }
 
-    /*ToDoList 수정*/
+    /*5-3.ToDoList 수정*/
     @Transactional
     public ToDoListResponseDto updateToDoListPost(Member member, ToDoListRequestDto toDoListRequestDto) {
         Member author = boardRepository.findAuthor(toDoListRequestDto.getId());
@@ -310,13 +316,13 @@ public class BoardServiceImpl {
             ToDoList findPost = boardRepository.findToDoListPost(postId);
             findPost.updatePost(toDoListRequestDto.getTitle(), employee, modifiedTime, jobDate);
 
-            return readToDoList(store);
+            return readToDoList(author, store);
         } else {
             return new ToDoListResponseDto("Failed");
         }
     }
 
-    /*재고관리 정보 수정*/
+    /*5-4.재고관리 정보 수정*/
     @Transactional
     public StockResponseDto updateStockPost(Member member, StockRequestDto stockRequestDto) {
         Long postId = stockRequestDto.getId();
@@ -340,14 +346,14 @@ public class BoardServiceImpl {
                 description, expirationTime, modifiedTime, productFileName, productFilePath);
     }
 
-    /*재고관리 파일 수정*/
+    /*5-5.재고관리 파일 수정*/
     @Transactional
     public void updateStockFilePost(Long postId, String newFileName,String newFilePath) {
         Stock findPost = boardRepository.findStockPost(postId);
         findPost.updateFile(newFileName, newFilePath);
     }
-
-    /*ToDoList 업무 완료 표시*/
+    /**--6.기타--**/
+    /*6-1.ToDoList 업무 완료 표시*/
     @Transactional
     public PostDetailResponseDto clearJob(Long id) {
         ToDoList findPost = boardRepository.findToDoListPost(id);
@@ -359,6 +365,4 @@ public class BoardServiceImpl {
             return new PostDetailResponseDto("Success");
         }
     }
-
-
 }
