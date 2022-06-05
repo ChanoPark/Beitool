@@ -60,4 +60,7 @@ public class Belong {
     public void setPosition(MemberPosition position) {
         this.position = position;
     }
+    public void setSalaryHour(Integer Salary) {
+        this.salaryHour = salaryHour;
+    }
 }

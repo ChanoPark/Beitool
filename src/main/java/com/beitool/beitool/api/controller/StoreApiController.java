@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +31,8 @@ import java.util.Map;
  * 4.메인 화면(사업장 이름 반환, 나중에 일정도 반환할 것으로 예상)
  * 5.사업장 변경(소속되어 있는 사업장 정보 반환)
  * 6.소속되어 있는 직원 목록 반환
+ * 7.가게 환경 설정 접속(가게 코드 반환)
+ * 8.직원 급여 변경
  * 예상되는 기능: 사업장 정보 수정 등
  * Implemented by Chanos
  */
@@ -41,7 +44,7 @@ public class StoreApiController {
     private final MemberKakaoApiService memberKakaoApiService;
     private final BelongWorkInfoRepository belongWorkInfoRepository;
 
-    /*사업장 생성(+사장 직급 업데이트)*/
+    /*1.사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
     public CreateAndJoinStoreResponse createStore(@RequestBody CreateStoreRequest createStoreRequest) {
         System.out.println("***사업장 생성 createStoreRequest : " + createStoreRequest);
@@ -68,7 +71,7 @@ public class StoreApiController {
         return createStoreResponse;
     }
 
-    /*사업장 가입(+직원 직급 업데이트)*/
+    /*2.사업장 가입(+직원 직급 업데이트)*/
     @PostMapping("/store/join/")
     public CreateAndJoinStoreResponse joinStore(@RequestBody JoinStoreRequest joinStoreRequest) {
         System.out.println("***사업장 가입 request:" + joinStoreRequest);
@@ -90,7 +93,7 @@ public class StoreApiController {
         }
         return createStoreResponse;
     }
-    /*지도에 들어왔을 때, 사업장 위도,경도값 반환*/
+    /*3.지도에 들어왔을 때, 사업장 위도,경도값 반환*/
     @PostMapping("/store/map/")
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestBody Map<String, String> param) {
         String accessToken = param.get("accessToken");
@@ -98,7 +101,7 @@ public class StoreApiController {
         return storeAddressAndAllowDistance;
     }
 
-    /*메인 화면(사업장 이름)*/
+    /*4.메인 화면(사업장 이름)*/
     @PostMapping("/store/main/")
     public GetActiveStoreInfo getActiveStoreInfo(@RequestBody Map<String, String> param) {
         String accessToken = param.get("accessToken");
@@ -110,7 +113,7 @@ public class StoreApiController {
         return new GetActiveStoreInfo(member.getActiveStore().getName(), position);
     }
 
-    /*사업장 변경(소속되어 있는 사업장 정보 반환)*/
+    /*5.사업장 변경(소속되어 있는 사업장 정보 반환)*/
     @PostMapping("/store/belonginfo/")
     public GetBelongStoreInfoResponse getBelongStoreInfo(@RequestBody Map<String, String> param) {
         String accessToken = param.get("accessToken");
@@ -120,7 +123,7 @@ public class StoreApiController {
         return storeService.getBelongStoreInfo(member);
     }
 
-    /*소속되어 있는 직원 목록 반환*/
+    /*6.소속되어 있는 직원 목록 반환*/
     @PostMapping("/store/belong/employee/")
     public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestBody Map<String, String> params) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(params.get("accessToken"));
@@ -128,7 +131,28 @@ public class StoreApiController {
         return storeService.getBelongEmployeeList(member.getActiveStore().getId());
     }
 
-    /*-----DTO-----*/
+    /*7.가게 환경 설정 접속(가게 코드 반환)*/
+    @PostMapping("/store/config/")
+    public GetConfigInfoResponse getConfigInfo(@RequestBody Map<String, String> param) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+        Store store = member.getActiveStore();
+
+        return new GetConfigInfoResponse(store.getInviteCode(), store.getAllowDistance());
+    }
+
+    /*8.직원 급여 변경*/
+    @PostMapping("/store/config/salary/")
+    public ResponseEntity setEmployeeSalary(@RequestBody SetEmployeeSalaryRequest employeeSalaryRequest) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(employeeSalaryRequest.getAccessToken());
+        Store store = memberRepository.findOne(memberId).getActiveStore();
+        Long employeeId = employeeSalaryRequest.getEmployeeId();
+        Integer newSalary = employeeSalaryRequest.getNewSalary();
+
+        return storeService.setEmployeeSalary(store, employeeId, newSalary);
+    }
+
+    /*---------------DTO-----------------*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
     @Data
     static class CreateStoreRequest {
@@ -175,5 +199,20 @@ public class StoreApiController {
     static class GetActiveStoreInfo {
         private String storeName;
         private MemberPosition position;
+    }
+
+    /*사업장 환경설정 접속시 받는 Response*/
+    @Data @AllArgsConstructor
+    static class GetConfigInfoResponse {
+        private Integer inviteCode;
+        private Integer allowDistance;
+    }
+
+    /*직원 급여 변경을 위한 Request DTO*/
+    @Data
+    static class SetEmployeeSalaryRequest {
+        private String accessToken;
+        private Long employeeId;
+        private Integer newSalary;
     }
 }

@@ -15,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -41,6 +38,7 @@ import java.util.Map;
  * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
  * 7.사업장 변경(소속되어 있는 사업장 정보 반환)
  * 8.소속되어 있는 직원 목록 반환
+ * 9.직원 급여 변경
  * Implemented by Chanos
  */
 @Service
@@ -53,7 +51,7 @@ public class StoreService {
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
 
-    /*사업장 생성*/
+    /*1.사업장 생성*/
     public Store createStore(String storeName, String address, String addressDetail) {
         //사업장 위도, 경도 추출
         Map<String, Double> axis = changeAxis(address);
@@ -66,7 +64,7 @@ public class StoreService {
         return store;
     }
 
-    /*카카오 로컬 API를 활용해 도로명 주소를 좌표(위도, 경도)로 변환*/
+    /*2.카카오 로컬 API를 활용해 도로명 주소를 좌표(위도, 경도)로 변환*/
     public Map<String, Double> changeAxis(String address) {
         System.out.println("***주소:" + address);
         String appKey = "64ebcc55e9ce025378904a725743ba67"; // 카카오 REST API Key 값
@@ -112,7 +110,7 @@ public class StoreService {
         return axis;
     }
 
-    /*사업장 코드 생성(난수 5자리)*/
+    /*3.사업장 코드 생성(난수 5자리)*/
     public int createStoreCode() {
         int code = -1;
         while(code < 0) {
@@ -129,7 +127,7 @@ public class StoreService {
         return code;
     }
 
-    /*사장이 사업장을 생성함과 동시에 사업장에 소속되기 위한 메소드*/
+    /*4.사장이 사업장을 생성함과 동시에 사업장에 소속되기 위한 메소드*/
     public LocalDate joinStore(Member member, Store store, String name) {
         LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
         Belong belong = new Belong(member, store, currentTime, MemberPosition.President ,name); //사업장 이름 = 가게 이름
@@ -140,7 +138,7 @@ public class StoreService {
         return currentTime;
     }
 
-    /*사업장에 직원이 가입하기 위한 메소드*/
+    /*5.사업장에 직원이 가입하기 위한 메소드*/
     public Long joinStore(Member member, int inviteCode, LocalDate currentTime, String name) throws NoResultException {
         //사업장 코드로 사업장 조회
         Store store = storeRepository.findStoreByCode(inviteCode);
@@ -153,7 +151,7 @@ public class StoreService {
         return store.getId();
     }
 
-    /*지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
+    /*6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(String accessToken) {
         String isWorking;
 
@@ -175,7 +173,7 @@ public class StoreService {
         return new StoreAddressResponseDto(lat, lon, allowDistance, isWorking);
     }
 
-    /*사업장 변경(소속되어 있는 사업장 정보 반환)*/
+    /*7.사업장 변경(소속되어 있는 사업장 정보 반환)*/
     public GetBelongStoreInfoResponse getBelongStoreInfo(Member member) {
         GetBelongStoreInfoResponse getBelongStoreInfoResponse = new GetBelongStoreInfoResponse();
 
@@ -199,7 +197,7 @@ public class StoreService {
         return getBelongStoreInfoResponse;
     }
 
-    /*소속되어 있는 직원 목록 반환*/
+    /*8.소속되어 있는 직원 목록 반환*/
     public BelongEmployeeListResponseDto getBelongEmployeeList(Long storeId) {
         Store store = storeRepository.findOne(storeId);
         List<Belong> belongEmployeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
@@ -212,5 +210,16 @@ public class StoreService {
         }
         employeeListResponseDto.setMessage("Success");
         return employeeListResponseDto;
+    }
+
+    /*9.직원 급여 변경*/
+    @Transactional
+    public ResponseEntity setEmployeeSalary(Store store, Long employeeId, Integer newSalary) {
+        Member employee = memberRepository.findOne(employeeId);
+        Belong findBelong = belongWorkInfoRepository.findBelongInfo(employee, store);
+
+        findBelong.setSalaryHour(newSalary);
+
+        return new ResponseEntity("Success", HttpStatus.OK);
     }
 }
