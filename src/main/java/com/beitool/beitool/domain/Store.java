@@ -3,6 +3,7 @@ package com.beitool.beitool.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -55,5 +56,10 @@ public class Store {
     private Integer salaryCycle; //급여 주기
     @Column(name="salary_date")
     private LocalDateTime salaryDate; //급여 날짜
+
+    /*출퇴근 허용 거리 설정*/
+    public void setAllowDistance(Integer allowDistance) {
+        this.allowDistance=allowDistance;
+    }
 
 }

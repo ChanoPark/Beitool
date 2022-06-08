@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +34,7 @@ import java.util.Map;
  * 6.소속되어 있는 직원 목록 반환
  * 7.가게 환경 설정 접속(가게 코드 반환)
  * 8.직원 급여 변경
+ * 9.출근 허용 거리 설정
  * 예상되는 기능: 사업장 정보 수정 등
  * Implemented by Chanos
  */
@@ -152,6 +154,20 @@ public class StoreApiController {
         return storeService.setEmployeeSalary(store, employeeId, newSalary);
     }
 
+    /*9.출근 허용 거리 설정*/
+    @PostMapping("/store/config/distance/")
+    public ResponseEntity setStoreAllowDistance(@RequestBody SetStoreAllowDistanceRequest storeDistanceRequest) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(storeDistanceRequest.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        Store store = member.getActiveStore();
+
+        storeService.setStoreAllowDistance(store, storeDistanceRequest.getAllowDistance());
+
+        System.out.println("**store:" + store.getName() + "//" + store.getAllowDistance());
+
+        return new ResponseEntity("Success", HttpStatus.OK);
+    }
+
     /*---------------DTO-----------------*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
     @Data
@@ -214,5 +230,12 @@ public class StoreApiController {
         private String accessToken;
         private Long employeeId;
         private Integer newSalary;
+    }
+
+    /*사업장 출근 허용 가능 거리 설정을 위한 Request DTO*/
+    @Data
+    static class SetStoreAllowDistanceRequest {
+        private String accessToken;
+        private Integer allowDistance;
     }
 }

@@ -213,13 +213,21 @@ public class StoreService {
     }
 
     /*9.직원 급여 변경*/
-    @Transactional
     public ResponseEntity setEmployeeSalary(Store store, Long employeeId, Integer newSalary) {
         Member employee = memberRepository.findOne(employeeId);
         Belong findBelong = belongWorkInfoRepository.findBelongInfo(employee, store);
 
+        System.out.println("***belong:" + findBelong.getMember().getId() + "//" +
+                findBelong.getSalaryHour() + "///" + findBelong.getStore().getName());
+
         findBelong.setSalaryHour(newSalary);
 
         return new ResponseEntity("Success", HttpStatus.OK);
+    }
+
+    /*10.사업장 출퇴근 허용 거리 변경*/
+    @Transactional
+    public void setStoreAllowDistance(Store store, Integer allowDistance) {
+        store.setAllowDistance(allowDistance);
     }
 }
