@@ -35,11 +35,16 @@ import java.util.Map;
  * 3.사업장 코드 생성(5자리 난수)
  * 4.사업장 생성과 동시에 사장이 소속
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
+ *    5-1.직원 이름 중복 여부 확인
  * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
  * 7.사업장 변경(소속되어 있는 사업장 정보 반환)
  * 8.소속되어 있는 직원 목록 반환
  * 9.직원 급여 변경
- * Implemented by Chanos
+ * 10.사업장 출퇴근 허용 거리 변경
+ * 11.가입 대기 직원 목록 조회
+ *
+ * @author Chanos
+ * @since 2022-06-08
  */
 @Service
 @Transactional
@@ -143,12 +148,27 @@ public class StoreService {
         //사업장 코드로 사업장 조회
         Store store = storeRepository.findStoreByCode(inviteCode);
 
-        Belong belong = new Belong(member, store, currentTime, MemberPosition.Employee, name);
+        //이름 중복 검사
+        if (isDuplName(store, name)) {
+            Belong belong = new Belong(member, store, currentTime, MemberPosition.Waiting, name);
 
-        member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
-        belongWorkInfoRepository.createBelong(belong);
+            member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
+            belongWorkInfoRepository.createBelong(belong);
 
-        return store.getId();
+            return store.getId();
+        } else {
+            return -1L;
+        }
+    }
+
+    /*5-1.직원 이름 중복 확인*/
+    public boolean isDuplName(Store store, String userName) {
+        if (belongWorkInfoRepository.findName(store, userName)) {
+            System.out.println("***Success");
+        } else {
+            System.out.println("***Fail");
+        }
+        return false;
     }
 
     /*6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
@@ -229,5 +249,10 @@ public class StoreService {
     @Transactional
     public void setStoreAllowDistance(Store store, Integer allowDistance) {
         store.setAllowDistance(allowDistance);
+    }
+
+    /*11.가입 대기 직원 목록 조회*/
+    public List<Belong> getWaitEmployee(Store store) {
+        return storeRepository.findWaitEmployee(store);
     }
 }

@@ -29,6 +29,8 @@ import java.util.List;
  * 14.배정된 근무 삭제
  * 15.예정된 근무 조회(근무 시프트 수정)
  * 16.일정 기간 근무 기록 조회(급여계산기)
+ * 17.일정 기간 근무 예정 조회(급여계산기)
+ * 18.사업장 내 중복된 이름 존재 여부 검사
  *
  * @author Chanos
  * @since 2022-05-25
@@ -170,5 +172,22 @@ public class BelongWorkInfoRepository {
                 .setParameter("firstDay", firstDay)
                 .setParameter("lastDay", lastDay)
                 .getResultList();
+    }
+
+    /*18.사업장 내 중복된 이름 존재 여부 검사*/
+    public boolean findName(Store store, String userName) {
+        List<String> resultList = em.createQuery("select b.name from Belong b where " +
+                        "b.store =:store and b.name =:name and (b.position=:EmployeePosition or b.position=:PresidentPosition)")
+                .setParameter("store", store)
+                .setParameter("name", userName)
+                .setParameter("EmployeePosition", MemberPosition.Employee)
+                .setParameter("PresidentPosition", MemberPosition.President)
+                .getResultList();
+
+        //중복되는 이름이 있으면 false 반환
+        if (resultList.size() > 0)
+            return false;
+        else
+            return true;
     }
 }

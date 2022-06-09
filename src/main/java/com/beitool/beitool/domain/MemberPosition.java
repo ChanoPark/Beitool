@@ -1,13 +1,14 @@
 package com.beitool.beitool.domain;
 
 /**
- * 2022-03-27 회원이 가질 수 있는 직급
  * President: 사장
  * Employee: 직원
+ * Waiting: 가입 대기중
  * NoPosition: 직급X (미가입상태)
  *
- * Implemented by Chanos
+ * @author Chanos
+ * @since 2022-06-03
  */
 public enum MemberPosition {
-    President, Employee, NoPosition
+    President, Employee, Waiting, NoPosition
 }

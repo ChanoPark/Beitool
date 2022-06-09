@@ -96,6 +96,7 @@ public class MemberKakaoApiService {
 
         System.out.println("***멤버 조회::" + memberRepository.findOne(kakaoUserId));
 
+        //유저 생성
         if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
             Member member = new Member(kakaoUserId, authorizationKakaoDto.getRefreshToken());
             memberRepository.save(member);

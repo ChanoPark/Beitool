@@ -5,6 +5,7 @@ import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
+import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +38,8 @@ import java.util.Map;
  * 7.가게 환경 설정 접속(가게 코드 반환)
  * 8.직원 급여 변경
  * 9.출근 허용 거리 설정
+ * 10.가입 대기 직원 목록 확인
+ * 11.새로운 직원 승인
  * 예상되는 기능: 사업장 정보 수정 등
  * Implemented by Chanos
  */
@@ -81,13 +86,20 @@ public class StoreApiController {
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
 
         try {
-            //회원 직급 등록(직원)
             Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
             Member findMember = memberRepository.findOne(memberId);
 
             //사업장 가입
             LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
             Long storeId = storeService.joinStore(findMember, joinStoreRequest.getInviteCode(), currentTime, joinStoreRequest.getUserName());
+
+            //이름이 중복된 경우
+            if (storeId < 0) {
+                createStoreResponse.setMessage("Duplicated name");
+                createStoreResponse.setScreen("PlaceJoin");
+                return createStoreResponse;
+            }
+
             createStoreResponse.setBelongInfo(memberId, storeId, currentTime, "Success", "MainScreen");
         } catch (NoResultException e) { //올바르지 않은 사업장 코드
             createStoreResponse.setMessage("Failed");
@@ -168,6 +180,23 @@ public class StoreApiController {
         return new ResponseEntity("Success", HttpStatus.OK);
     }
 
+    /*10.가입 대기 직원 목록 확인*/
+    @PostMapping("/store/wait/employee/")
+    public GetWaitEmployeeResponse getWaitEmployee(@RequestBody Map<String, String> param) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+        Member member = memberRepository.findOne(memberId);
+        Store store = member.getActiveStore();
+
+        List<Belong> waitEmployeeList = storeService.getWaitEmployee(store);
+        return new GetWaitEmployeeResponse(waitEmployeeList);
+    }
+
+    /*11.새로운 직원 승인*/
+    @PostMapping("/store/wait/employee/allow/")
+    public void allowNewEmployee() {
+
+    }
+
     /*---------------DTO-----------------*/
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
     @Data
@@ -205,7 +234,6 @@ public class StoreApiController {
     @Data
     static class JoinStoreRequest {
         private String accessToken;
-        private String status;
         private String userName;
         private int inviteCode;
     }
@@ -237,5 +265,16 @@ public class StoreApiController {
     static class SetStoreAllowDistanceRequest {
         private String accessToken;
         private Integer allowDistance;
+    }
+
+    /*가입 대기 직원 목록 조회를 위한 Response DTO*/
+    @Data
+    static class GetWaitEmployeeResponse {
+        private List<Belong> waitEmployeeList;
+
+        public GetWaitEmployeeResponse(List<Belong> waitEmployeeList) {
+            this.waitEmployeeList = new ArrayList<>(waitEmployeeList);
+        }
+
     }
 }
