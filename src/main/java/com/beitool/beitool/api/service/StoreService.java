@@ -1,9 +1,6 @@
 package com.beitool.beitool.api.service;
 
-import com.beitool.beitool.api.dto.store.BelongEmployeeListResponseDto;
-import com.beitool.beitool.api.dto.store.BelongedStore;
-import com.beitool.beitool.api.dto.store.GetBelongStoreInfoResponse;
-import com.beitool.beitool.api.dto.store.StoreAddressResponseDto;
+import com.beitool.beitool.api.dto.store.*;
 import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
@@ -22,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.NoResultException;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -29,19 +27,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 2022-04-10 사업장과 관련된 서비스를 제공하는 클래스
+ * 사업장과 관련된 서비스를 제공하는 클래스
+ *
  * 1.사업장 생성
  * 2.도로명 주소를 위/경도로 변환(사업장 주소를 위함)
  * 3.사업장 코드 생성(5자리 난수)
  * 4.사업장 생성과 동시에 사장이 소속
  * 5.직원이 사업장에 가입 -> 4번 메소드 오버로딩
- *    5-1.직원 이름 중복 여부 확인
  * 6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환
  * 7.사업장 변경(소속되어 있는 사업장 정보 반환)
  * 8.소속되어 있는 직원 목록 반환
  * 9.직원 급여 변경
  * 10.사업장 출퇴근 허용 거리 변경
  * 11.가입 대기 직원 목록 조회
+ * 12.가입 대기 직원 승인
+ * 13.가입 대기 직원 삭제
  *
  * @author Chanos
  * @since 2022-06-08
@@ -149,26 +149,20 @@ public class StoreService {
         Store store = storeRepository.findStoreByCode(inviteCode);
 
         //이름 중복 검사
-        if (isDuplName(store, name)) {
+        try {
+            //NoResultException 이 안터지면 겹치는 이름이 있다는 것.
+            belongWorkInfoRepository.findName(store, name);
+            return -1L;
+        } catch (NoResultException e) {
+            System.out.println("***결과없는 예외 발생!!!!!!!!!!!!");
             Belong belong = new Belong(member, store, currentTime, MemberPosition.Waiting, name);
 
             member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
             belongWorkInfoRepository.createBelong(belong);
 
             return store.getId();
-        } else {
-            return -1L;
         }
-    }
 
-    /*5-1.직원 이름 중복 확인*/
-    public boolean isDuplName(Store store, String userName) {
-        if (belongWorkInfoRepository.findName(store, userName)) {
-            System.out.println("***Success");
-        } else {
-            System.out.println("***Fail");
-        }
-        return false;
     }
 
     /*6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
@@ -252,7 +246,39 @@ public class StoreService {
     }
 
     /*11.가입 대기 직원 목록 조회*/
-    public List<Belong> getWaitEmployee(Store store) {
-        return storeRepository.findWaitEmployee(store);
+    public GetWaitEmployeeResponse getWaitEmployee(Store store) {
+        List<Belong> waitEmployeeList = belongWorkInfoRepository.findWaitEmployee(store);
+
+        GetWaitEmployeeResponse waitEmployeeResponse = new GetWaitEmployeeResponse();
+
+        for (Belong waitEmployee : waitEmployeeList) {
+            Long employeeId = waitEmployee.getMember().getId();
+            String employeeName = waitEmployee.getName();
+            LocalDate belongDate = waitEmployee.getBelongDate();
+
+            waitEmployeeResponse.addWaitEmployee(employeeId, employeeName, belongDate);
+        }
+        return waitEmployeeResponse;
+    }
+
+    /*12.가입 대기 직원 승인*/
+    @Transactional
+    public ResponseEntity allowNewEmployee(Store store, List<Long> employeeIdList, String request) {
+        MemberPosition newPosition; //새로운 직급
+
+        if (request == "Allow") {
+            newPosition = MemberPosition.Employee;
+        } else if (request == "Deny") {
+            newPosition = MemberPosition.NoPosition;
+        } else {
+            return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
+        }
+
+        for (Long employeeId : employeeIdList) {
+            Member employee = memberRepository.findOne(employeeId);
+            Belong belongInfo = belongWorkInfoRepository.allowNewEmployee(employee, store);
+            belongInfo.setPosition(newPosition);
+        }
+        return new ResponseEntity("Success", HttpStatus.OK);
     }
 }

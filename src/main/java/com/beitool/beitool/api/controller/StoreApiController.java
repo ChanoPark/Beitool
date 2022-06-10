@@ -5,7 +5,6 @@ import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
-import com.beitool.beitool.domain.Belong;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
@@ -23,12 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 2022-04-10 사업장과 관련된 요청을 처리하는 컨트롤러
+ * 사업장과 관련된 요청을 처리하는 컨트롤러
  * 1.사업장 생성
  * 2.사업장 가입
  * 3.지도에 들어왔을 때, 사업장 위도,경도값 반환
@@ -39,9 +37,10 @@ import java.util.Map;
  * 8.직원 급여 변경
  * 9.출근 허용 거리 설정
  * 10.가입 대기 직원 목록 확인
- * 11.새로운 직원 승인
- * 예상되는 기능: 사업장 정보 수정 등
- * Implemented by Chanos
+ * 11.가입 대기 직원 승인 & 삭제
+ *
+ * @author Chanos
+ * @since 2022-06-09
  */
 @RestController
 @RequiredArgsConstructor
@@ -187,14 +186,24 @@ public class StoreApiController {
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
 
-        List<Belong> waitEmployeeList = storeService.getWaitEmployee(store);
-        return new GetWaitEmployeeResponse(waitEmployeeList);
+        return storeService.getWaitEmployee(store);
     }
 
-    /*11.새로운 직원 승인*/
+    /*11.가입 대기 직원 승인 & 삭제*/
     @PostMapping("/store/wait/employee/allow/")
-    public void allowNewEmployee() {
+    public ResponseEntity allowNewEmployee(@RequestBody NewEmployeeRequest newEmployeeRequest) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(newEmployeeRequest.getAccessToken());
+        Member member = memberRepository.findOne(memberId);
+        Store store = member.getActiveStore();
+        List<Long> employeeIdList = newEmployeeRequest.getEmployeeIdList();
 
+        MemberPosition position = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
+
+        if (position != MemberPosition.President) {
+            return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
+        }
+
+        return storeService.allowNewEmployee(store, employeeIdList, newEmployeeRequest.getRequest());
     }
 
     /*---------------DTO-----------------*/
@@ -267,14 +276,11 @@ public class StoreApiController {
         private Integer allowDistance;
     }
 
-    /*가입 대기 직원 목록 조회를 위한 Response DTO*/
+    /*새로운 직원 승인하기 위한 Request DTO*/
     @Data
-    static class GetWaitEmployeeResponse {
-        private List<Belong> waitEmployeeList;
-
-        public GetWaitEmployeeResponse(List<Belong> waitEmployeeList) {
-            this.waitEmployeeList = new ArrayList<>(waitEmployeeList);
-        }
-
+    static class NewEmployeeRequest {
+        private String accessToken;
+        private List<Long> employeeIdList;
+        private String request; //승인 or 삭제
     }
 }
