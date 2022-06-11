@@ -1,13 +1,10 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.*;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.WorkService;
 import com.beitool.beitool.domain.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -74,7 +71,7 @@ public class WorkApiController {
         LocalDateTime firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
         LocalDateTime lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
 
-        return workService.readScheduleMonthly(member, firstDateTime, lastDateTime);
+        return workService.readScheduleMonthly(member.getActiveStore(), firstDateTime, lastDateTime);
     }
 
     /*4.캘린더 하루 일정 조회*/
@@ -125,7 +122,8 @@ public class WorkApiController {
             firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
             lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
             return workService.calculateSalaryForPresident(member, firstDateTime, lastDateTime);
-        } else if (isMonthOrWeek.equals("Week")) {
+        }
+        else if (isMonthOrWeek.equals("Week")) {
             Integer countWeek = salaryCalRequestDTO.getCountWeek() - 1;
             firstDateTime = LocalDateTime.of(firstDate, zeroTime).plusWeeks(countWeek);
             lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서
@@ -153,7 +151,8 @@ public class WorkApiController {
             firstDateTime = LocalDateTime.of(firstDate, zeroTime); //1일
             lastDateTime = LocalDateTime.of(lastDate, zeroTime).plusDays(1); //다음달 1일 00시까지 출근한 것 포함.
             return workService.calculateSalaryForEmployee(member, firstDateTime, lastDateTime);
-        } else if (isMonthOrWeek.equals("Week")) {
+        }
+        else if (isMonthOrWeek.equals("Week")) {
             Integer countWeek = salaryCalRequestDTO.getCountWeek() - 1;
             firstDateTime = LocalDateTime.of(firstDate, zeroTime).plusWeeks(countWeek);
             lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서

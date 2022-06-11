@@ -149,13 +149,15 @@ public class WorkService {
     }
 
     /*4.캘린더 일정 한달 조회*/
-    public ScheduleReadResponseDto readScheduleMonthly(Member member, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
+    public ScheduleReadResponseDto readScheduleMonthly(Store store, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
         ScheduleReadResponseDto scheduleReadResponseDto = new ScheduleReadResponseDto();
-        Store store = member.getActiveStore();
         LocalDateTime today = LocalDateTime.now();
 
+        /*******전체 회원을 조회해야 하는데, 사장것만 조회하다 보니까 res가 안오는거같네요~~~******/
+        //근무기록 조회할 때 회원 조건 빼고 사업장만 걸어서 한번에 조회하면 될듯? ? ? ?
+
         //1일 ~ 오늘 : 근무 기록
-        List<WorkInfo> workInfos = belongWorkInfoRepository.findWorkHistoryPeriod(member, store, firstDateTime, today);
+        List<WorkInfo> workInfos = belongWorkInfoRepository.findAllWorkHistoryPeriod(store, firstDateTime, today);
         for (WorkInfo workInfo : workInfos) {
             String name = belongWorkInfoRepository.findBelongInfo(workInfo.getMember(), store).getName();
             Long postId = workInfo.getId();
@@ -164,7 +166,7 @@ public class WorkService {
         }
 
         //오늘 ~ 말일 : 근무 예정
-        List<WorkSchedule> workSchedules = belongWorkInfoRepository.findWorkFuturePeriod(member, store, today, lastDateTime);
+        List<WorkSchedule> workSchedules = belongWorkInfoRepository.findAllWorkFuturePeriod(store, today, lastDateTime);
         for (WorkSchedule workSchedule : workSchedules) {
             String name = belongWorkInfoRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
             String author = belongWorkInfoRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
@@ -318,10 +320,10 @@ public class WorkService {
         //직원 정보 조회
         Belong employee = belongWorkInfoRepository.findBelongInfo(member, store);
 
-        //각 직원의 모든 근무 기록 조회
+        //직원의 모든 근무 기록 조회
         List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
-        //각 직원의 근로 시간 합계
+        //직원의 근로 시간 합계
         int salaryHour = employee.getSalaryHour();
         int workingHour; //근로 시간(시간)
         int workingMin;  //근로 시간(분)
