@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
@@ -145,9 +146,8 @@ public class BoardController {
 
     /*3-3.재고관리 조회*/
     @PostMapping("/board/stock/post/read/")
-    public StockResponseDto readStockPost(@RequestBody Map<String, Long> param) {
-        Long postId = param.get("id");
-        return boardServiceImpl.readStockPost(postId);
+    public StockResponseDto readStockPost(@RequestParam("id") Long id) {
+        return boardServiceImpl.readStockPost(id);
     }
 
     /***--4.게시글 삭제--***/
@@ -226,7 +226,7 @@ public class BoardController {
     /***--6.기타--***/
     /*6-1.ToDoList 업무 완료 표시*/
     @PostMapping("/board/todo/clear/")
-    public PostDetailResponseDto clearJob(@RequestBody Map<String, Long> params) {
-        return boardServiceImpl.clearJob(params.get("id"));
+    public PostDetailResponseDto clearJob(@RequestParam("id") Long id) {
+        return boardServiceImpl.clearJob(id);
     }
 }

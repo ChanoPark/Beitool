@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.NoResultException;
@@ -108,16 +109,14 @@ public class StoreApiController {
     }
     /*3.지도에 들어왔을 때, 사업장 위도,경도값 반환*/
     @PostMapping("/store/map/")
-    public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestBody Map<String, String> param) {
-        String accessToken = param.get("accessToken");
+    public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestParam("accessToken") String accessToken) {
         StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
         return storeAddressAndAllowDistance;
     }
 
     /*4.메인 화면(사업장 이름)*/
     @PostMapping("/store/main/")
-    public GetActiveStoreInfo getActiveStoreInfo(@RequestBody Map<String, String> param) {
-        String accessToken = param.get("accessToken");
+    public GetActiveStoreInfo getActiveStoreInfo(@RequestParam("accessToken") String accessToken) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
@@ -128,8 +127,7 @@ public class StoreApiController {
 
     /*5.사업장 변경(소속되어 있는 사업장 정보 반환)*/
     @PostMapping("/store/belonginfo/")
-    public GetBelongStoreInfoResponse getBelongStoreInfo(@RequestBody Map<String, String> param) {
-        String accessToken = param.get("accessToken");
+    public GetBelongStoreInfoResponse getBelongStoreInfo(@RequestParam("accessToken") String accessToken) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
@@ -138,16 +136,16 @@ public class StoreApiController {
 
     /*6.소속되어 있는 직원 목록 반환*/
     @PostMapping("/store/belong/employee/")
-    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestBody Map<String, String> params) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(params.get("accessToken"));
+    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestParam("accessToken") String accessToken) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         return storeService.getBelongEmployeeList(member.getActiveStore().getId());
     }
 
     /*7.가게 환경 설정 접속(가게 코드 반환)*/
     @PostMapping("/store/config/")
-    public GetConfigInfoResponse getConfigInfo(@RequestBody Map<String, String> param) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+    public GetConfigInfoResponse getConfigInfo(@RequestParam("accessToken") String accessToken) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
 
@@ -181,8 +179,8 @@ public class StoreApiController {
 
     /*10.가입 대기 직원 목록 확인*/
     @PostMapping("/store/wait/employee/")
-    public GetWaitEmployeeResponse getWaitEmployee(@RequestBody Map<String, String> param) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+    public GetWaitEmployeeResponse getWaitEmployee(@RequestParam("accessToken") String accessToken) {
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
 

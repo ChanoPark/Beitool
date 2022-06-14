@@ -32,8 +32,8 @@ public class FileController {
 
     /*S3 파일 삭제*/
     @DeleteMapping("/board/stock/delete/file/")
-    public ResponseEntity deleteStock(@RequestBody Map<String, String> param) {
-        amazonS3Service.deleteFile(param.get("fileName"));
+    public ResponseEntity deleteStock(@RequestParam("fileName") String fileName) {
+        amazonS3Service.deleteFile(fileName);
         return new ResponseEntity("Delete file success", HttpStatus.OK);
     }
 

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -85,13 +86,12 @@ public class WorkApiController {
 
     /*5.캘린더 일정 삭제*/
     @PostMapping("/work/delete/schedule/")
-    public ResponseEntity deleteSchedule(@RequestBody Map<String, String> param) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(param.get("accessToken"));
+    public ResponseEntity deleteSchedule(@RequestParam("accessToken") String accessToken,
+                                         @RequestParam("id") Long id) { //PostId
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
-        Long postId = Long.parseLong(param.get("id"));
-
-        return workService.deleteSchedule(member, postId);
+        return workService.deleteSchedule(member, id);
     }
 
     /*6.캘린더 일정 수정*/

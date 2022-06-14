@@ -64,9 +64,8 @@ public class MemberSocialApiController {
 
     /*회원이 사용하는 사업장 변경*/
     @PostMapping("/member/change/activestore/")
-    public void changeStore(@RequestBody Map<String, String> param) {
-        String accessToken = param.get("accessToken");
-        Long storeId = Long.parseLong(param.get("storeId"));
+    public void changeStore(@RequestParam("accessToken") String accessToken,
+                            @RequestParam("storeId") Long storeId) {
 
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
