@@ -3,7 +3,8 @@ package com.beitool.beitool.api.service;
 import com.beitool.beitool.api.dto.AuthorizationKakaoDto;
 import com.beitool.beitool.api.dto.TokenInfoFromKakaoDto;
 import com.beitool.beitool.api.dto.UpdateTokenFromKakaoDto;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.BelongRepository;
+import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.Member;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,7 +40,8 @@ public class MemberKakaoApiService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final WorkInfoRepository workInfoRepository;
+    private final BelongRepository belongRepository;
 
     /*컨트롤러에서 엑세스토큰을 받으면(프론트에서 로그인하면) 사용자 확인 & 토큰 만료 확인*/
     /*토큰 정보 확인*/
@@ -103,7 +105,7 @@ public class MemberKakaoApiService {
             authorizationKakaoDto.setScreen("UserSelect");
         } else { //기존 유저 -> 소속 여부 확인
             Member findMember = memberRepository.findOne(kakaoUserId);
-            if (belongWorkInfoRepository.findBelongCount(findMember) > 0)
+            if (belongRepository.findBelongCount(findMember) > 0)
                 authorizationKakaoDto.setScreen("MainScreen"); //소속된 곳이 있으면 메인 화면으로 이동
             else
                 authorizationKakaoDto.setScreen("UserSelect"); //소속된 곳이 없으면 직급 선택으로 이동

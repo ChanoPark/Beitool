@@ -1,7 +1,8 @@
 package com.beitool.beitool.api.service;
 
 import com.beitool.beitool.api.dto.store.*;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.BelongRepository;
+import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.repository.StoreRepository;
 import com.beitool.beitool.domain.Belong;
@@ -19,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.NoResultException;
-import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -51,10 +51,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StoreService {
     private final RestTemplate restTemplate;
-    private final StoreRepository storeRepository;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
+    private final StoreRepository storeRepository;
+    private final WorkInfoRepository workInfoRepository;
+    private final BelongRepository belongRepository;
 
     /*1.사업장 생성*/
     public Store createStore(String storeName, String address, String addressDetail) {
@@ -139,7 +140,7 @@ public class StoreService {
 
         member.setActiveStore(store); //회원의 사용중인 사업장 디폴트값 세팅
 
-        belongWorkInfoRepository.createBelong(belong);
+        belongRepository.createBelong(belong);
         return currentTime;
     }
 
@@ -151,14 +152,14 @@ public class StoreService {
         //이름 중복 검사
         try {
             //NoResultException 이 안터지면 겹치는 이름이 있다는 것.
-            belongWorkInfoRepository.findName(store, name);
+            belongRepository.findName(store, name);
             return -1L;
         } catch (NoResultException e) {
             System.out.println("***결과없는 예외 발생!!!!!!!!!!!!");
             Belong belong = new Belong(member, store, currentTime, MemberPosition.Waiting, name);
 
             member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
-            belongWorkInfoRepository.createBelong(belong);
+            belongRepository.createBelong(belong);
 
             return store.getId();
         }
@@ -179,7 +180,7 @@ public class StoreService {
         double lon = findStore.getLongitude();
         int allowDistance = findStore.getAllowDistance();
 
-        if (belongWorkInfoRepository.findWorkInfo(findMember, findStore) > 0) {
+        if (workInfoRepository.findWorkInfo(findMember, findStore) > 0) {
             isWorking = "working";
         } else {
             isWorking = "noWorking";
@@ -192,13 +193,13 @@ public class StoreService {
         GetBelongStoreInfoResponse getBelongStoreInfoResponse = new GetBelongStoreInfoResponse();
 
         //활성화된 사업장 소속 정보 조회
-        Belong activeStoreBelongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());
+        Belong activeStoreBelongInfo = belongRepository.findBelongInfo(member, member.getActiveStore());
         //활성화된 사업장 소속 정보 Response에 저장
         getBelongStoreInfoResponse.setActiveStoreName(activeStoreBelongInfo.getName());
         getBelongStoreInfoResponse.setActiveStorePosition(activeStoreBelongInfo.getPosition());
 
         //소속되어 있는 모든 사업장 소속 정보
-        List<Belong> belongs = belongWorkInfoRepository.allBelongInfo(member);
+        List<Belong> belongs = belongRepository.allBelongInfo(member);
 
         for (Belong belong : belongs) {
             String belongStoreName = belong.getStore().getName(); //소속된 사업장 이름
@@ -214,7 +215,7 @@ public class StoreService {
     /*8.소속되어 있는 직원 목록 반환*/
     public BelongEmployeeListResponseDto getBelongEmployeeList(Long storeId) {
         Store store = storeRepository.findOne(storeId);
-        List<Belong> belongEmployeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
+        List<Belong> belongEmployeeList = belongRepository.getBelongEmployeeList(store);
 
         BelongEmployeeListResponseDto employeeListResponseDto = new BelongEmployeeListResponseDto();
         for (Belong employee : belongEmployeeList) {
@@ -229,7 +230,7 @@ public class StoreService {
     /*9.직원 급여 변경*/
     public ResponseEntity setEmployeeSalary(Store store, Long employeeId, Integer newSalary) {
         Member employee = memberRepository.findOne(employeeId);
-        Belong findBelong = belongWorkInfoRepository.findBelongInfo(employee, store);
+        Belong findBelong = belongRepository.findBelongInfo(employee, store);
 
         System.out.println("***belong:" + findBelong.getMember().getId() + "//" +
                 findBelong.getSalaryHour() + "///" + findBelong.getStore().getName());
@@ -247,7 +248,7 @@ public class StoreService {
 
     /*11.가입 대기 직원 목록 조회*/
     public GetWaitEmployeeResponse getWaitEmployee(Store store) {
-        List<Belong> waitEmployeeList = belongWorkInfoRepository.findWaitEmployee(store);
+        List<Belong> waitEmployeeList = belongRepository.findWaitEmployee(store);
 
         GetWaitEmployeeResponse waitEmployeeResponse = new GetWaitEmployeeResponse();
 
@@ -276,7 +277,7 @@ public class StoreService {
 
         for (Long employeeId : employeeIdList) {
             Member employee = memberRepository.findOne(employeeId);
-            Belong belongInfo = belongWorkInfoRepository.allowNewEmployee(employee, store);
+            Belong belongInfo = belongRepository.allowNewEmployee(employee, store);
             belongInfo.setPosition(newPosition);
         }
         return new ResponseEntity("Success", HttpStatus.OK);

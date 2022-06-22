@@ -1,7 +1,8 @@
 package com.beitool.beitool.api.service;
 
 import com.beitool.beitool.api.dto.board.*;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.BelongRepository;
+import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.BoardRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.domain.*;
@@ -48,7 +49,8 @@ import java.util.List;
 public class BoardServiceImpl {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final WorkInfoRepository workInfoRepository;
+    private final BelongRepository belongRepository;
 
     /***--1.게시글 목록 조회--***/
     /*1-1.부모 클래스인 BoardDomain 조회*/
@@ -72,7 +74,7 @@ public class BoardServiceImpl {
     /*1-2.ToDoList 게시글 조회*/
     public ToDoListResponseDto readToDoList(Member member, Store store) {
         ToDoListResponseDto toDoListResponseDto = new ToDoListResponseDto();
-        Belong belong = belongWorkInfoRepository.findBelongInfo(member, store);
+        Belong belong = belongRepository.findBelongInfo(member, store);
 
         List<ToDoList> toDoLists;
 
@@ -94,7 +96,7 @@ public class BoardServiceImpl {
             LocalDate jobDate = findPost.getJobDate();
 
             Member employee = findPost.getEmployee();
-            String employeeName = belongWorkInfoRepository.findBelongInfo(employee, store).getName();
+            String employeeName = belongRepository.findBelongInfo(employee, store).getName();
             toDoListResponseDto.addPost(id, title, employeeName, isClear, jobDate);
         }
         toDoListResponseDto.setMessage("Success");
@@ -172,7 +174,7 @@ public class BoardServiceImpl {
 
     /*2-4.재고관리 작성*/
     public StockResponseDto createStockPost(StockRequestDto stockRequestDto, Member member) {
-        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName(); //작성자
+        String authorName = belongRepository.findBelongInfo(member, member.getActiveStore()).getName(); //작성자
         String productName = stockRequestDto.getProductName(); //상품명(부모 테이블의 제목에 들어감)
         Integer quantity = stockRequestDto.getQuantity(); //개수
         String description = stockRequestDto.getDescription(); //설명
@@ -338,7 +340,7 @@ public class BoardServiceImpl {
 
         String productFileName = stockRequestDto.getProductFileName();
         String productFilePath = stockRequestDto.getProductFilePath();
-        String authorName = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getName();
+        String authorName = belongRepository.findBelongInfo(member, member.getActiveStore()).getName();
 
         findPost.updateStock(quantity, expirationTime, modifiedTime, authorName, description, productName);
 

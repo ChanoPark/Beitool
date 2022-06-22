@@ -1,7 +1,8 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.board.*;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.BelongRepository;
+import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.AmazonS3Service;
 import com.beitool.beitool.api.service.BoardServiceImpl;
@@ -50,7 +51,8 @@ public class BoardController {
     private final BoardServiceImpl boardServiceImpl;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final WorkInfoRepository workInfoRepository;
+    private final BelongRepository belongRepository;
     private final AmazonS3Service amazonS3Service;
 
     /***--1.게시글 목록 조회--***/
@@ -89,7 +91,7 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
 
-        Belong belongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());//활성화된 사업장소속정보
+        Belong belongInfo = belongRepository.findBelongInfo(member, member.getActiveStore());//활성화된 사업장소속정보
         
         if (belongInfo.getPosition().equals(MemberPosition.President)) //사장만 공지사항 작성 가능
             return boardServiceImpl.createAnnouncementPost(member, belongInfo, boardRequestDto);
@@ -103,7 +105,7 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());
         Member member = memberRepository.findOne(memberId);
 
-        Belong belongInfo = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore());
+        Belong belongInfo = belongRepository.findBelongInfo(member, member.getActiveStore());
 
         return boardServiceImpl.createFreePost(member, belongInfo, boardRequestDto);
     }
@@ -113,7 +115,7 @@ public class BoardController {
     public ToDoListResponseDto createToDoPost(@RequestBody ToDoListRequestDto toDoListRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(toDoListRequestDto.getAccessToken());
         Member author = memberRepository.findOne(memberId);
-        Belong belongInfo = belongWorkInfoRepository.findBelongInfo(author, author.getActiveStore());
+        Belong belongInfo = belongRepository.findBelongInfo(author, author.getActiveStore());
         //사장만 업무를 지시할 수 있다.
         if (belongInfo.getPosition().equals(MemberPosition.President))
             return boardServiceImpl.createToDoPost(author, belongInfo, toDoListRequestDto);

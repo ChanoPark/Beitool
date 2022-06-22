@@ -1,7 +1,8 @@
 package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.store.*;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
+import com.beitool.beitool.api.repository.BelongRepository;
+import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
@@ -24,7 +25,6 @@ import javax.persistence.NoResultException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 사업장과 관련된 요청을 처리하는 컨트롤러
@@ -49,7 +49,8 @@ public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
+    private final WorkInfoRepository workInfoRepository;
+    private final BelongRepository belongRepository;
 
     /*1.사업장 생성(+사장 직급 업데이트)*/
     @PostMapping("/store/create/")
@@ -120,7 +121,7 @@ public class StoreApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
-        MemberPosition position = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
+        MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
 
         return new GetActiveStoreInfo(member.getActiveStore().getName(), position);
     }
@@ -195,7 +196,7 @@ public class StoreApiController {
         Store store = member.getActiveStore();
         List<Long> employeeIdList = newEmployeeRequest.getEmployeeIdList();
 
-        MemberPosition position = belongWorkInfoRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
+        MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
 
         if (position != MemberPosition.President) {
             return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);

@@ -4,9 +4,7 @@ import com.beitool.beitool.api.dto.*;
 import com.beitool.beitool.api.dto.SalaryCalPresidentResponseDto.*;
 import com.beitool.beitool.api.dto.SalaryCalEmployeeResponseDto.*;
 import com.beitool.beitool.api.dto.ScheduleReadResponseDto.WorkInfoResponse;
-import com.beitool.beitool.api.repository.BelongWorkInfoRepository;
-import com.beitool.beitool.api.repository.MemberRepository;
-import com.beitool.beitool.api.repository.StoreRepository;
+import com.beitool.beitool.api.repository.*;
 import com.beitool.beitool.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -44,8 +42,10 @@ import java.util.Map;
 public class WorkService {
     private final MemberKakaoApiService memberKakaoApiService;
     private final MemberRepository memberRepository;
-    private final BelongWorkInfoRepository belongWorkInfoRepository;
     private final StoreRepository storeRepository;
+    private final BelongRepository belongRepository;
+    private final WorkScheduleRepository workScheduleRepository;
+    private final WorkInfoRepository workInfoRepository;
 
     /*1.출퇴근*/
     public String workCommute(String workType, String accessToken) {
@@ -63,19 +63,19 @@ public class WorkService {
             System.out.println("***출근");
 
             //퇴근하지 않고 출근 버튼을 누르면 출근 불가능
-            if (belongWorkInfoRepository.findWorkInfo(member, store) == 0) {
+            if (workInfoRepository.findWorkInfo(member, store) == 0) {
                 //근로정보 생성(출근)
                 WorkInfo workInfo = new WorkInfo(member, member.getActiveStore(), currentTime, today);
-                belongWorkInfoRepository.createWorkInfo(workInfo);
+                workInfoRepository.createWorkInfo(workInfo);
                 result = "Success";
             }//퇴근이면 근로정보 조회 후 퇴근 정보 업데이트
         } else {
             System.out.println("***퇴근");
 
             //출근하지 않고 퇴근 버튼을 누르면 퇴근 불가능
-            if (belongWorkInfoRepository.findWorkInfo(member, store) > 0) {
+            if (workInfoRepository.findWorkInfo(member, store) > 0) {
                 //퇴근 정보 업데이트
-                belongWorkInfoRepository.updateOffWork(member, store, currentTime);
+                workInfoRepository.updateOffWork(member, store, currentTime);
                 result = "Success";
             }
         }
@@ -95,7 +95,7 @@ public class WorkService {
 
         if (validateSchedule(workDay, workStartTime, workEndTime)) {
             WorkSchedule workSchedule = new WorkSchedule(employee, member, store, workDay, workStartTime, workEndTime);
-            belongWorkInfoRepository.createSchedule(workSchedule);
+            workScheduleRepository.createSchedule(workSchedule);
             return new ResponseEntity("Success", HttpStatus.CREATED);
         } else {
             return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
@@ -109,7 +109,7 @@ public class WorkService {
             return false;
 
         try {
-            List<WorkSchedule> workSchedules = belongWorkInfoRepository.getWorkSchedule(workDay);//해당 날짜 근무 조회
+            List<WorkSchedule> workSchedules = workScheduleRepository.getWorkSchedule(workDay);//해당 날짜 근무 조회
 
             for (WorkSchedule workSchedule : workSchedules) {
 
@@ -157,19 +157,19 @@ public class WorkService {
         //근무기록 조회할 때 회원 조건 빼고 사업장만 걸어서 한번에 조회하면 될듯? ? ? ?
 
         //1일 ~ 오늘 : 근무 기록
-        List<WorkInfo> workInfos = belongWorkInfoRepository.findAllWorkHistoryPeriod(store, firstDateTime, today);
+        List<WorkInfo> workInfos = workInfoRepository.findAllWorkHistoryPeriod(store, firstDateTime, today);
         for (WorkInfo workInfo : workInfos) {
-            String name = belongWorkInfoRepository.findBelongInfo(workInfo.getMember(), store).getName();
+            String name = belongRepository.findBelongInfo(workInfo.getMember(), store).getName();
             Long postId = workInfo.getId();
             WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime(), workInfo.getWorkDay());
             scheduleReadResponseDto.setWorkInfos(workInfoResponse);
         }
 
         //오늘 ~ 말일 : 근무 예정
-        List<WorkSchedule> workSchedules = belongWorkInfoRepository.findAllWorkFuturePeriod(store, today, lastDateTime);
+        List<WorkSchedule> workSchedules = workScheduleRepository.findAllWorkFuturePeriod(store, today, lastDateTime);
         for (WorkSchedule workSchedule : workSchedules) {
-            String name = belongWorkInfoRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
-            String author = belongWorkInfoRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
+            String name = belongRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
+            String author = belongRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
             Long postId = workSchedule.getId();
             WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, author, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
             scheduleReadResponseDto.setWorkInfos(workInfoResponse);
@@ -185,18 +185,18 @@ public class WorkService {
 
         //오늘 이전의 날짜를 선택하면 실제 근무 기록을 반환함.
         if (day.isBefore(today) || day.isEqual(today)) {
-            List<WorkInfo> workInfos = belongWorkInfoRepository.readScheduleHistory(store, day);
+            List<WorkInfo> workInfos = workInfoRepository.readScheduleHistory(store, day);
             for (WorkInfo workInfo : workInfos) {
-                String name = belongWorkInfoRepository.findBelongInfo(workInfo.getMember(), store).getName();
+                String name = belongRepository.findBelongInfo(workInfo.getMember(), store).getName();
                 Long postId = workInfo.getId();
                 WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime(), workInfo.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
             }
         } else { //오늘 포함 이후의 날짜를 선택하면 배정되어 있는 근무를 반환함.
-            List<WorkSchedule> workSchedules = belongWorkInfoRepository.readScheduleFuture(store, day);
+            List<WorkSchedule> workSchedules = workScheduleRepository.readScheduleFuture(store, day);
             for (WorkSchedule workSchedule : workSchedules) {
-                String employeeName = belongWorkInfoRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
-                String authorName = belongWorkInfoRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
+                String employeeName = belongRepository.findBelongInfo(workSchedule.getEmployee(), store).getName();
+                String authorName = belongRepository.findBelongInfo(workSchedule.getAuthor(), store).getName();
                 Long postId = workSchedule.getId();
                 WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, employeeName, authorName, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
@@ -208,12 +208,12 @@ public class WorkService {
     /*6.캘린더 일정 삭제*/
     public ResponseEntity deleteSchedule(Member member, Long postId) {
         Store store = member.getActiveStore();
-        Belong belongInfo = belongWorkInfoRepository.findBelongInfo(member, store);
+        Belong belongInfo = belongRepository.findBelongInfo(member, store);
 
-        Member employee = belongWorkInfoRepository.findEmployee(postId).getAuthor();
+        Member employee = workScheduleRepository.findEmployee(postId).getAuthor();
         //작성자 혹은 사장만 삭제 가능
         if (belongInfo.getPosition().equals(MemberPosition.President) || member.equals(employee)) {
-            belongWorkInfoRepository.deleteSchedule(postId);
+            workScheduleRepository.deleteSchedule(postId);
             return new ResponseEntity("Delete Success", HttpStatus.ACCEPTED);
         }
         return new ResponseEntity("Delete Failed", HttpStatus.BAD_REQUEST);
@@ -223,7 +223,7 @@ public class WorkService {
     @Transactional
     public ResponseEntity updateSchedule(Member author, ScheduleUpdateRequestDto scheduleUpdateRequestDto) {
         Long postId = scheduleUpdateRequestDto.getId();
-        WorkSchedule schedule = belongWorkInfoRepository.findSchedule(postId);
+        WorkSchedule schedule = workScheduleRepository.findSchedule(postId);
 
         Long employeeId = scheduleUpdateRequestDto.getEmployee();
 
@@ -244,11 +244,11 @@ public class WorkService {
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(Member member, LocalDateTime firstDateTime, LocalDateTime lastDateTime) {
         SalaryCalPresidentResponseDto responseDto = new SalaryCalPresidentResponseDto();
 
-        // 해당 가게 조회
+        //해당 가게 조회
         Store store = member.getActiveStore();
 
         //회원 목록 조회
-        List<Belong> employeeList = belongWorkInfoRepository.getBelongEmployeeList(store);
+        List<Belong> employeeList = belongRepository.getBelongEmployeeList(store);
 
         //각 회원당 근무 기록 조회
         int totalSalary = 0; //모든 직원의 급여 합계
@@ -268,7 +268,7 @@ public class WorkService {
             Integer salaryHour = employee.getSalaryHour(); //해당 가게에서 받는 시급 가져오기.
             workingTime = 0;
             //각 직원의 모든 근무 기록 조회
-            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
+            List<WorkInfo> workingTimes = workInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
             //각 직원의 근로 시간 합계 계산
             for (WorkInfo workInfo : workingTimes) {
@@ -318,10 +318,10 @@ public class WorkService {
         Store store = member.getActiveStore();
 
         //직원 정보 조회
-        Belong employee = belongWorkInfoRepository.findBelongInfo(member, store);
+        Belong employee = belongRepository.findBelongInfo(member, store);
 
         //직원의 모든 근무 기록 조회
-        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
+        List<WorkInfo> workingTimes = workInfoRepository.findWorkHistoryPeriod(employee.getMember(), store, firstDateTime, lastDateTime);
 
         //직원의 근로 시간 합계
         int salaryHour = employee.getSalaryHour();
@@ -370,7 +370,7 @@ public class WorkService {
 
         //일주일 근무 시간 및 주휴수당 계산 -> 월급, 주급 분리해서 볼 때 활용하면 코드 중복성을 낮출 수 있겠음.
         while (endWeek.isBefore(lastDateTime)) {
-            List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
+            List<WorkInfo> workingTimes = workInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
 
             for (WorkInfo workInfo : workingTimes) {
                 workingTimeInWeek += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
@@ -386,7 +386,7 @@ public class WorkService {
 
         startWeek = endWeek;
         endWeek = lastDateTime.plusDays(1); //1일 00시까지 근무하는 것을 확인해야 하기 때문.
-        List<WorkInfo> workingTimes = belongWorkInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
+        List<WorkInfo> workingTimes = workInfoRepository.findWorkHistoryPeriod(employee.getMember(), employee.getStore(), startWeek, endWeek);
 
         for (WorkInfo workInfo : workingTimes) {
             workingTimeInWeek += ChronoUnit.MINUTES.between(workInfo.getWorkStartTime(), workInfo.getWorkEndTime());
