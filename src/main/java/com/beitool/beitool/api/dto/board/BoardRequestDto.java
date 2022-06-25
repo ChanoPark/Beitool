@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.dto.board;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -8,8 +9,11 @@ import lombok.Data;
  * @since 2022-05-09
  */
 @Data
+@Schema(description = "보드컨트롤러DTO")
 public class BoardRequestDto {
+    @Schema(description = "엑세스 토큰")
     private String accessToken;
+    @Schema(description = "게시판 종류")
     private String boardType;
 
     //게시글 생성, 수정에 사용될 제목과 내용, 시간은 현재 시간.

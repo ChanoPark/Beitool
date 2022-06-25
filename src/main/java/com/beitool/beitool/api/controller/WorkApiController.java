@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Map;
 
 /**
  * 회원 근로와 관련된 컨트롤러
@@ -36,6 +37,8 @@ import java.util.Map;
  * @since 2022-04-18
  * @author Chanos
  */
+
+@Api(tags="근로")
 @RestController
 @RequiredArgsConstructor
 public class WorkApiController {
@@ -44,6 +47,7 @@ public class WorkApiController {
     private final WorkService workService;
 
     /*1.출퇴근(프론트에서 결과만 받음)*/
+    @Operation(summary = "출/퇴근")
     @PostMapping("/work/commute/")
     public CommuteResponseDto workCommute(@RequestBody CommuteRequestDto commuteRequestDto) {
         String isWorking = commuteRequestDto.getWorkType(); //출근인지 퇴근인지
@@ -51,6 +55,7 @@ public class WorkApiController {
     }
 
     /*2.캘린더 일정 작성*/
+    @Operation(summary = "캘린더에 근무 일정 작성")
     @PostMapping("/work/create/schedule/")
     public ResponseEntity createSchedule(@RequestBody ScheduleCreateRequestDto scheduleCreateRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleCreateRequestDto.getAccessToken());
@@ -59,6 +64,7 @@ public class WorkApiController {
     }
 
     /*3.캘린더 한달 일정 조회*/
+    @Operation(summary = "캘린더 한달 근무 일정 조회", description = "이미 근무한 기록과 근무 예정 기록을 날짜에 따라 반환")
     @PostMapping("/work/read/schedule/monthly/")
     public ScheduleReadResponseDto readScheduleMonthly(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
@@ -76,6 +82,7 @@ public class WorkApiController {
     }
 
     /*4.캘린더 하루 일정 조회*/
+    @Operation(summary = "캘린더 하루 일정 조회", description = "날짜에 따라 근무 기록 or 근무 예정 기록을 반환")
     @PostMapping("/work/read/schedule/")
     public ScheduleReadResponseDto readSchedule(@RequestBody ScheduleReadRequestDto scheduleReadRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleReadRequestDto.getAccessToken());
@@ -85,6 +92,7 @@ public class WorkApiController {
     }
 
     /*5.캘린더 일정 삭제*/
+    @Operation(summary = "캘린더 근무 예정 기록 삭제", description = "캘린더의 근무 예정 기록을 삭제, 근무 기록은 삭제X")
     @PostMapping("/work/delete/schedule/")
     public ResponseEntity deleteSchedule(@RequestParam("accessToken") String accessToken,
                                          @RequestParam("id") Long id) { //PostId
@@ -95,6 +103,7 @@ public class WorkApiController {
     }
 
     /*6.캘린더 일정 수정*/
+    @Operation(summary = "캘린더 근무 예정 기록 수정")
     @PostMapping("/work/update/schedule/")
     public ResponseEntity updateSchedule(@RequestBody ScheduleUpdateRequestDto scheduleUpdateRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(scheduleUpdateRequestDto.getAccessToken());
@@ -103,6 +112,7 @@ public class WorkApiController {
     }
 
     /*7.급여 계산기(사장)*/
+    @Operation(summary = "급여 계산기 조회 - 사장")
     @PostMapping("/work/salary/president/")
     public SalaryCalPresidentResponseDto calculateSalaryForPresident(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(salaryCalRequestDTO.getAccessToken());
@@ -133,6 +143,7 @@ public class WorkApiController {
     }
 
     /*8.급여 계산기(직원)*/
+    @Operation(summary = "급여 계산기 조회 - 직원")
     @PostMapping("/work/salary/employee/")
     public SalaryCalEmployeeResponseDto calculateSalaryForEmployee(@RequestBody SalaryCalRequestDTO salaryCalRequestDTO) {
         Member member = memberRepository.findByRefreshToken(salaryCalRequestDTO.getAccessToken());
