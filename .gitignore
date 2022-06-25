@@ -40,3 +40,4 @@ out/
 application.yml
 webConfig.class
 aws.yml
+src/main/resources/dist/redoc/redoc.standalone.js

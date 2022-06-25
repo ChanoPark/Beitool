@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,10 @@ public class StockReadResponseDto {
         this.message = message;
     }
 
+    @ApiModelProperty(value="재고관리 게시글 정보", example="게시글 번호, 제목, 내용, 유통기한, 수정시간, 사진경로 포함됨.")
     private List<StockList> stocks;
+
+    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
     private String message;
 
     public void setStock(Long id, String title, String description, LocalDateTime expirationTime,

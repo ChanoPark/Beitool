@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ public class ScheduleReadResponseDto {
         this.workInfos.add(workInfoResponse);
     }
 
+    @ApiModelProperty(value="근로 일정 정보", example="직원 번호, 이름, 출근/퇴근 시간, 근로 날짜")
     List<WorkInfoResponse> workInfos;
 
     @Data

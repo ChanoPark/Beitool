@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.dto.store;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Setter;
@@ -10,8 +11,15 @@ import lombok.Setter;
  */
 @Data @Setter @AllArgsConstructor
 public class StoreAddressResponseDto {
-    private double latitude; //사업장 위도
-    private double longitude; //사업장 경도
-    private int allowDistance; //출퇴근 허용 거리
-    private String message; //response 메세지
+    @ApiModelProperty(value="사업장 위도", example="92.123123")
+    private double latitude;
+
+    @ApiModelProperty(value="사업장 경도", example="182.312412")
+    private double longitude;
+
+    @ApiModelProperty(value="출퇴근 허용 거리(단위:m)", example="300")
+    private int allowDistance;
+
+    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
+    private String message;
 }

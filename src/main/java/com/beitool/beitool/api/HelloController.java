@@ -12,8 +12,14 @@ public class HelloController {
     }
 
     /*Swagger로 이동하기 위함*/
-    @GetMapping("/usage/api/")
+    @GetMapping("/doc/api/v1/")
     public String redirectSwagger() {
         return "redirect:/swagger-ui/index.html";
+    }
+
+    /*redoc이 적용된Swagger로 이동하기 위함*/
+    @GetMapping("/doc/api/v2/")
+    public String redirectSwaggerWithRedoc() {
+        return "redirect:/dist/redoc/index.html";
     }
 }

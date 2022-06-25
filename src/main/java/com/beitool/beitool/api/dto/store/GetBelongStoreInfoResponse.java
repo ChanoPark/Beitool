@@ -1,6 +1,7 @@
 package com.beitool.beitool.api.dto.store;
 
 import com.beitool.beitool.domain.MemberPosition;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -12,8 +13,14 @@ import java.util.List;
  */
 @Data
 public class GetBelongStoreInfoResponse {
+
+    @ApiModelProperty(value="활성화된 사업장 이름", example="사업장1")
     private String activeStoreName;
+
+    @ApiModelProperty(value="활성화된 사업장에서의 직급", example="President")
     private MemberPosition activeStorePosition;
+
+    @ApiModelProperty(value="소속된 사업장 정보", example="사업장 이름, 번호 / 회원 이름, 번호 포함됨.")
     private List<BelongedStore> belongedStore;
 
     public GetBelongStoreInfoResponse() {

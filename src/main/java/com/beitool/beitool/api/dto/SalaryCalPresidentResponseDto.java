@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -34,15 +35,31 @@ public class SalaryCalPresidentResponseDto {
         this.totalInsurance = totalInsurance;
     }
 
+    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
     String message;
-    Integer employeeNum; // 고용 인원
-    Integer totalSalary; // 모든 직원의 급여 합계
-    Integer totalWorkingHour; //모든 직원의 근로 시간(시간)
-    Integer totalWorkingMin;  //모든 직원의 근로 시간(분)
-    Integer totalHolidayPay; //주휴수당 합계
-    Integer totalInsurance; //4대보험 합계
 
+    @ApiModelProperty(value="고용 인원", example="15")
+    Integer employeeNum;
+
+    @ApiModelProperty(value="급여 합계", example="1364125")
+    Integer totalSalary;
+
+    @ApiModelProperty(value="모든 직원의 근로 시간(시간)", example="134")
+    Integer totalWorkingHour;
+
+    @ApiModelProperty(value="모든 직원의 근로 시간(분)", example="42")
+    Integer totalWorkingMin;
+
+    @ApiModelProperty(value="주휴수당 합계", example="173523")
+    Integer totalHolidayPay;
+
+    @ApiModelProperty(value="4대 보험 합계", example="946117")
+    Integer totalInsurance;
+
+    @ApiModelProperty(value="급여 정보", example="직원 이름, 급여, 일한 시간, 분, 주휴수당 포함됨.")
     List<SalaryInfo> salaryInfos;
+
+    
     @Data
     public static class SalaryInfo {
         public SalaryInfo(String name, Integer salary, Integer workingHour, Integer workingMin, Integer holidayPay) {

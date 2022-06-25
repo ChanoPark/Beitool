@@ -72,7 +72,7 @@ public class BoardController {
     }
 
     /*1-2.ToDoList 목록 조회*/
-    @Operation(summary="ToDoList 목록 조회")
+    @Operation(summary="ToDoList 목록 조회", description = "자유게시판:Free / 공지사항:Announcement / 투두리스트:ToDo / 재고관리: Stock")
     @PostMapping("/board/todo/read/")
     public ToDoListResponseDto readToDoListBoard(@RequestBody BoardRequestDto boardRequestDto) {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(boardRequestDto.getAccessToken());

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -15,6 +16,8 @@ import java.util.List;
 /*가입 대기 직원 목록 조회를 위한 Response DTO*/
 @Data
 public class GetWaitEmployeeResponse {
+
+    @ApiModelProperty(value="가입 대기중인 회원 목록", example="대기중인 회원의 ID, 이름, 신청 날짜 포함됨.")
     private List<WaitEmployeeInfo> waitEmployeeInfoList;
 
     public GetWaitEmployeeResponse() {

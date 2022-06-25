@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -23,7 +24,11 @@ public class ToDoListResponseDto {
     public ToDoListResponseDto(String message) {
         this.message = message;
     }
+
+    @ApiModelProperty(value="게시글 정보", example="게시글 번호, 내용, 직원, 완료유무, 업무 날짜 포함")
     private List<PostInfo> posts;
+
+    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
     private String message;
 
     public void addPost(Long id, String content, String employeeName, boolean isClear, LocalDate jobDate) {

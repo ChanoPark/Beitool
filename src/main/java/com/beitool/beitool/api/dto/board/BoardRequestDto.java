@@ -1,6 +1,6 @@
 package com.beitool.beitool.api.dto.board;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -9,18 +9,23 @@ import lombok.Data;
  * @since 2022-05-09
  */
 @Data
-@Schema(description = "보드컨트롤러DTO")
 public class BoardRequestDto {
-    @Schema(description = "엑세스 토큰")
+
+    @ApiModelProperty(value="엑세스 토큰", example="znq2JnqZ", required = true)
     private String accessToken;
-    @Schema(description = "게시판 종류")
+
+    @ApiModelProperty(value="게시판 종류", example="Free", required = true)
     private String boardType;
 
-    //게시글 생성, 수정에 사용될 제목과 내용, 시간은 현재 시간.
+    @ApiModelProperty(value="제목", example="게시글 제목", required = true)
     private String title;
+
+    @ApiModelProperty(value="내용", example="게시글 내용", required = true)
     private String content;
 
-    private Integer page; //조회할 페이지
-    
-    private Long id; //게시글 번호
+    @ApiModelProperty(value="페이지", example="1", required = true)
+    private Integer page;
+
+    @ApiModelProperty(value="게시글 번호", example="게시글 제목")
+    private Long id;
 }

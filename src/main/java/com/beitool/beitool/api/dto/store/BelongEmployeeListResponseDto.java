@@ -1,5 +1,6 @@
 package com.beitool.beitool.api.dto.store;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -21,7 +22,10 @@ public class BelongEmployeeListResponseDto {
         employees.add(employeeInfo);
     }
 
+    @ApiModelProperty(value="회원 정보", example="회원 번호, 회원 이름 포함됨.")
     private List<EmployeeInfo> employees;
+
+    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
     private String message;
 
     @Data

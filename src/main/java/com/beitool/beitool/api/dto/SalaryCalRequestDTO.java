@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.lang.Nullable;
 
@@ -16,13 +17,19 @@ import java.time.LocalDate;
  */
 @Data
 public class SalaryCalRequestDTO {
+
+    @ApiModelProperty(value="엑세스 토큰", example="NvmzOQm13cCAq", required = true)
     private String accessToken;
-    private String isMonthOrWeek; //주급인지 월급인지
 
+    @ApiModelProperty(value="주급, 월급 선택", example="Week, Month", required = true)
+    private String isMonthOrWeek;
+
+    @ApiModelProperty(value="주급 - 주차 선택", example="2")
     @Nullable
-    private Integer countWeek; //주급이라면 몇주차인지
+    private Integer countWeek;
 
+    @ApiModelProperty(value="월 선택", example="2022-06-01(01~30까지 상관X)")
     @JsonDeserialize(using= LocalDateDeserializer.class)
     @JsonSerialize(using= LocalDateSerializer.class)
-    private LocalDate requestTime; //몇월달껄 보고 싶은지
+    private LocalDate requestTime;
 }

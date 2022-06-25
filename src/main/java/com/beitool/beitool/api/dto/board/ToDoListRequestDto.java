@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,16 +17,20 @@ import java.time.LocalDate;
  */
 @Data
 public class ToDoListRequestDto {
+    @ApiModelProperty(value="엑세스 토큰", example="An2I19zDMToP", required = true)
     private String accessToken;
-    private String boardType;
 
+    @ApiModelProperty(value="지시 내용", example="분리수거 하기.", required = true)
     private String title;
 
+    @ApiModelProperty(value="업무 기한", example="2022-06-21", required = true)
     @JsonDeserialize(using= LocalDateDeserializer.class)
     @JsonSerialize(using= LocalDateSerializer.class)
-    private LocalDate jobDate; //업무 기한
+    private LocalDate jobDate;
 
-    private Long employee; // 지시 대상
+    @ApiModelProperty(value="직원의 ID", example="5", required = true)
+    private Long employee;
 
-    private Long id; //게시글 번호
+    @ApiModelProperty(value="게시글 번호 (수정 시 사용)", example="4")
+    private Long id;
 }
