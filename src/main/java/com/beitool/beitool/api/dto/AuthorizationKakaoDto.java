@@ -12,9 +12,6 @@ import lombok.Getter;
 @Getter @Data
 public class AuthorizationKakaoDto {
 
-    @ApiModelProperty(value="엑세스 토큰", example="Nqk31NAmq")
-    private String accessToken; //엑세스 토큰 값
-
     @ApiModelProperty(value="리프레시 토큰", example="zKoqkm1Imv")
     private String refreshToken; //리프레시 토큰 값
 

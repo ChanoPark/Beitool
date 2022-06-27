@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
  */
 @Data
 public class StockRequestDto {
-    @ApiModelProperty(value="엑세스 토큰", example="FNqk1m3ka", required = true)
-    private String accessToken;
 
     @ApiModelProperty(value="게시글 번호(수정 시 사용)", example="3")
     private Long id;

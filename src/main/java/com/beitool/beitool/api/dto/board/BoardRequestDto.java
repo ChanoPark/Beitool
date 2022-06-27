@@ -11,9 +11,6 @@ import lombok.Data;
 @Data
 public class BoardRequestDto {
 
-    @ApiModelProperty(value="엑세스 토큰", example="znq2JnqZ", required = true)
-    private String accessToken;
-
     @ApiModelProperty(value="게시판 종류", example="Free", required = true)
     private String boardType;
 

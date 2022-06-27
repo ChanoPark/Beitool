@@ -18,9 +18,6 @@ import java.time.LocalDate;
 @Data
 public class SalaryCalRequestDTO {
 
-    @ApiModelProperty(value="엑세스 토큰", example="NvmzOQm13cCAq", required = true)
-    private String accessToken;
-
     @ApiModelProperty(value="주급, 월급 선택", example="Week, Month", required = true)
     private String isMonthOrWeek;
 

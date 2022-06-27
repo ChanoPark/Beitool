@@ -12,8 +12,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 회원과 관련된 요청을 처리하는 컨트롤러 (로그인/회원가입)
@@ -35,26 +38,29 @@ public class MemberSocialApiController {
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
     private final StoreRepository storeRepository;
+    private final HttpServletRequest request;
 
     /*1.로그인 후 엑세스토큰으로 회원 확인(신규/기존) */
     @Operation(summary = "로그인", description = "엑세스토큰 인증 실패->리프레시 토큰으로 재발급")
     @PostMapping("/login/kakao/")
-    public AuthorizationKakaoDto getKakaoToken(@RequestBody AuthorizationKakaoDto token) {
+    public AuthorizationKakaoDto getKakaoToken(@RequestBody AuthorizationKakaoDto authorizationKakaoDto) {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         try {
-            kakaoApiService.getTokenInfo(token);
+            kakaoApiService.getTokenInfo(accessToken, authorizationKakaoDto);
         } catch (HttpClientErrorException e) { //토큰이 만료된 경우
-            Member findMember = memberRepository.findByRefreshToken(token.getRefreshToken());
+            Member findMember = memberRepository.findByRefreshToken(authorizationKakaoDto.getRefreshToken());
 
             if (findMember.getRefreshToken() == "InvalidUser") { //리프레시 토큰이 잘못된 회원이라면 다시 로그인
                 System.out.println("***리프레시토큰이 Invalid***");
-                token.setScreen("LoginScreen");
-                return token;
+                authorizationKakaoDto.setScreen("LoginScreen");
+                return authorizationKakaoDto;
             }
-            kakaoApiService.updateAccessToken(token, findMember, token.getRefreshToken()); //리프레시토큰으로 갱신
-            kakaoApiService.getTokenInfo(token); //토큰 업데이트 후, 회원 정보 확인
+            kakaoApiService.updateAccessToken(authorizationKakaoDto, findMember, authorizationKakaoDto.getRefreshToken()); //리프레시토큰으로 갱신
+            kakaoApiService.getTokenInfo(accessToken, authorizationKakaoDto); //토큰 업데이트 후, 회원 정보 확인
         }
         System.out.println("***예외 없이 로그인 성공");
-        return token;
+        return authorizationKakaoDto;
     }
 
     /*2.직급 선택*/
@@ -70,9 +76,8 @@ public class MemberSocialApiController {
     /*3.회원이 사용하는 사업장 변경*/
     @Operation(summary = "활성화된 사업장 변경", description = "회원의 사용중인 사업장 변경")
     @PostMapping("/member/change/activestore/")
-    public void changeStore(@RequestParam("accessToken") String accessToken,
-                            @RequestParam("storeId") Long storeId) {
-
+    public void changeStore(@RequestParam("storeId") Long storeId) {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store =storeRepository.findOne(storeId);

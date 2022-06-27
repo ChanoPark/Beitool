@@ -10,8 +10,6 @@ import lombok.Data;
  */
 @Data
 public class StockDeleteRequestDto {
-    @ApiModelProperty(value="엑세스 토큰", example="KQN2Mav4", required = true)
-    private String accessToken;
 
     @ApiModelProperty(value="사진 이름", example="202201319~", required = true)
     private String productFileName;

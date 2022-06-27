@@ -17,8 +17,6 @@ import java.time.LocalDate;
  */
 @Data
 public class ToDoListRequestDto {
-    @ApiModelProperty(value="엑세스 토큰", example="An2I19zDMToP", required = true)
-    private String accessToken;
 
     @ApiModelProperty(value="지시 내용", example="분리수거 하기.", required = true)
     private String title;

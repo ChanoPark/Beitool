@@ -2,7 +2,6 @@ package com.beitool.beitool.api.controller;
 
 import com.beitool.beitool.api.dto.store.*;
 import com.beitool.beitool.api.repository.BelongRepository;
-import com.beitool.beitool.api.repository.WorkInfoRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
 import com.beitool.beitool.api.service.MemberKakaoApiService;
 import com.beitool.beitool.api.service.StoreService;
@@ -16,6 +15,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.NoResultException;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -54,19 +55,23 @@ public class StoreApiController {
     private final MemberRepository memberRepository;
     private final MemberKakaoApiService memberKakaoApiService;
     private final BelongRepository belongRepository;
+    private final HttpServletRequest request;
 
     /*1.사업장 생성(+사장 직급 업데이트)*/
     @Operation(summary = "사업장 생성", description = "사업장 생성 + 회원 '사장' 직급 결정->사장만 접근해야 함.")
     @PostMapping("/store/create/")
     public CreateAndJoinStoreResponse createStore(@RequestBody CreateStoreRequest createStoreRequest) {
         System.out.println("***사업장 생성 createStoreRequest : " + createStoreRequest);
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        System.out.println("****accssToken:"+accessToken);
 
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
         createStoreResponse.setMessage("Failed");
         createStoreResponse.setScreen("PlaceRegister");
 
         //회원 직급 등록(사장)
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(createStoreRequest.getAccessToken());
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 //            memberService.setPosition(memberId, createStoreRequest.getStatus());
 
@@ -89,10 +94,12 @@ public class StoreApiController {
     public CreateAndJoinStoreResponse joinStore(@RequestBody JoinStoreRequest joinStoreRequest) {
         System.out.println("***사업장 가입 request:" + joinStoreRequest);
 
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
 
         try {
-            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(joinStoreRequest.getAccessToken());
+            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
             Member findMember = memberRepository.findOne(memberId);
 
             //사업장 가입
@@ -117,7 +124,8 @@ public class StoreApiController {
     /*3.지도에 들어왔을 때, 사업장 위도,경도값 반환*/
     @Operation(summary = "사업장 위치 반환", description = "출퇴근을 위해 지도에 들어갔을 때, 활성화된 사업장의 위/경도 반환")
     @PostMapping("/store/map/")
-    public StoreAddressResponseDto getStoreAddressAndAllowDistance(@RequestParam("accessToken") String accessToken) {
+    public StoreAddressResponseDto getStoreAddressAndAllowDistance() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
         StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
         return storeAddressAndAllowDistance;
     }
@@ -125,7 +133,9 @@ public class StoreApiController {
     /*4.메인 화면(사업장 이름)*/
     @Operation(summary = "메인 화면 접속", description = "활성화된 사업장의 이름, 회원의 직급 반환")
     @PostMapping("/store/main/")
-    public GetActiveStoreInfo getActiveStoreInfo(@RequestParam("accessToken") String accessToken) {
+    public GetActiveStoreInfo getActiveStoreInfo() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
@@ -137,7 +147,9 @@ public class StoreApiController {
     /*5.사업장 변경(소속되어 있는 사업장 정보 반환)*/
     @Operation(summary = "소속된 사업장 리스트 반환", description = "사업장 변경을 위한 소속된 사업장 리스트 반환")
     @PostMapping("/store/belonginfo/")
-    public GetBelongStoreInfoResponse getBelongStoreInfo(@RequestParam("accessToken") String accessToken) {
+    public GetBelongStoreInfoResponse getBelongStoreInfo() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
@@ -147,7 +159,9 @@ public class StoreApiController {
     /*6.소속되어 있는 직원 목록 반환*/
     @Operation(summary = "사업장에 소속된 직원 목록 반환")
     @PostMapping("/store/belong/employee/")
-    public BelongEmployeeListResponseDto getBelongEmployeeList(@RequestParam("accessToken") String accessToken) {
+    public BelongEmployeeListResponseDto getBelongEmployeeList() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         return storeService.getBelongEmployeeList(member.getActiveStore().getId());
@@ -156,10 +170,11 @@ public class StoreApiController {
     /*7.사업장 환경 설정 접속(가게 코드 반환)*/
     @Operation(summary = "사업장 환경 설정", description = "사업장 코드 반환")
     @PostMapping("/store/config/")
-    public GetConfigInfoResponse getConfigInfo(@RequestParam("accessToken") String accessToken) {
+    public GetConfigInfoResponse getConfigInfo() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
-        Member member = memberRepository.findOne(memberId);
-        Store store = member.getActiveStore();
+        Store store = memberRepository.findOne(memberId).getActiveStore();
 
         return new GetConfigInfoResponse(store.getInviteCode(), store.getAllowDistance());
     }
@@ -168,7 +183,9 @@ public class StoreApiController {
     @Operation(summary = "직원 급여 변경")
     @PostMapping("/store/config/salary/")
     public ResponseEntity setEmployeeSalary(@RequestBody SetEmployeeSalaryRequest employeeSalaryRequest) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(employeeSalaryRequest.getAccessToken());
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Store store = memberRepository.findOne(memberId).getActiveStore();
         Long employeeId = employeeSalaryRequest.getEmployeeId();
         Integer newSalary = employeeSalaryRequest.getNewSalary();
@@ -180,7 +197,9 @@ public class StoreApiController {
     @Operation(summary = "사업장 출근 허용 거리 설정")
     @PostMapping("/store/config/distance/")
     public ResponseEntity setStoreAllowDistance(@RequestBody SetStoreAllowDistanceRequest storeDistanceRequest) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(storeDistanceRequest.getAccessToken());
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
 
@@ -194,10 +213,11 @@ public class StoreApiController {
     /*10.가입 대기 직원 목록 확인*/
     @Operation(summary = "사업장에 가입 대기중인 직원 목록")
     @PostMapping("/store/wait/employee/")
-    public GetWaitEmployeeResponse getWaitEmployee(@RequestParam("accessToken") String accessToken) {
+    public GetWaitEmployeeResponse getWaitEmployee() {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
-        Member member = memberRepository.findOne(memberId);
-        Store store = member.getActiveStore();
+        Store store = memberRepository.findOne(memberId).getActiveStore();
 
         return storeService.getWaitEmployee(store);
     }
@@ -206,7 +226,9 @@ public class StoreApiController {
     @Operation(summary = "가입 대기 직원 승인&삭제", description = "사장만 접근 가능.")
     @PostMapping("/store/wait/employee/allow/")
     public ResponseEntity allowNewEmployee(@RequestBody NewEmployeeRequest newEmployeeRequest) {
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(newEmployeeRequest.getAccessToken());
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
         List<Long> employeeIdList = newEmployeeRequest.getEmployeeIdList();

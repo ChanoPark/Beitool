@@ -45,8 +45,7 @@ public class MemberKakaoApiService {
 
     /*컨트롤러에서 엑세스토큰을 받으면(프론트에서 로그인하면) 사용자 확인 & 토큰 만료 확인*/
     /*토큰 정보 확인*/
-    public void getTokenInfo(AuthorizationKakaoDto authorizationKakaoDto) throws HttpClientErrorException {
-        String token = authorizationKakaoDto.getAccessToken();
+    public void getTokenInfo(String token, AuthorizationKakaoDto authorizationKakaoDto) throws HttpClientErrorException {
 
         //헤더
         HttpHeaders headers = new HttpHeaders();
@@ -66,7 +65,7 @@ public class MemberKakaoApiService {
             //결과
             System.out.println("***토큰정보의 response: " + response.getBody());
 
-            //남은 초 비교해서 토큰 갱신 여부 판단하자 -> JSON을 스트링으로 파싱하면 되지않을까? (GSON활용)
+            //남은 초 비교해서 토큰 갱신 여부 판단하자(GSON활용)
             String tokenInfoFromKakao = response.getBody();
 
             TokenInfoFromKakaoDto tokenInfo = objectMapper.readValue(tokenInfoFromKakao, TokenInfoFromKakaoDto.class);
@@ -76,11 +75,10 @@ public class MemberKakaoApiService {
             //엑세스 토큰 만료 시간이 얼마 남지 않은 경우
             if (tokenInfo.getExpires_in() <= 6000) { //토큰만료가 100분 이하일경우
                 System.out.println("***토큰 만료 시간이 100분 이하입니다.");
-                // 리프레시 토큰을 활용해 토큰 갱신
-                throw new HttpClientErrorException(UNAUTHORIZED);
+                throw new HttpClientErrorException(UNAUTHORIZED);// 리프레시 토큰을 활용해 토큰 갱신
             } else {
                 //기존 유저인지 확인부터 해야지
-                checkNewMember(authorizationKakaoDto);
+                checkNewMember(authorizationKakaoDto, token);
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -89,9 +87,9 @@ public class MemberKakaoApiService {
 
     /*컨트롤러에서 카카오 엑세스 토큰을 받아 회원정보 불러오는 API 호출*/
     /*신규 유저와 기존 유저 구분(직급 유/무까지)*/
-    public void checkNewMember(AuthorizationKakaoDto authorizationKakaoDto) {
+    public void checkNewMember(AuthorizationKakaoDto authorizationKakaoDto, String accessToken) {
 
-        Long kakaoUserId = getMemberInfoFromAccessToken(authorizationKakaoDto.getAccessToken());
+        Long kakaoUserId = getMemberInfoFromAccessToken(accessToken);
 
         //프론트에게 전해줄 회원ID
         authorizationKakaoDto.setId(kakaoUserId);

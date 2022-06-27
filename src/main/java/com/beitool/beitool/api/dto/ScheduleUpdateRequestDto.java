@@ -22,9 +22,6 @@ import java.time.LocalDateTime;
 @Data
 public class ScheduleUpdateRequestDto {
 
-    @ApiModelProperty(value="엑세스 토큰", example="nLAmq1Oc", required = true)
-    private String accessToken;
-
     @ApiModelProperty(value="업무 대상(직원) 번호", example="5")
     private Long employee;
 
