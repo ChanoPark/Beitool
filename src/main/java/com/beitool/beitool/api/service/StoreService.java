@@ -10,6 +10,7 @@ import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
 import com.beitool.beitool.domain.Store;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -46,9 +47,11 @@ import java.util.Map;
  * @author Chanos
  * @since 2022-06-08
  */
-@Service
+
+@Slf4j
 @Transactional
 @RequiredArgsConstructor
+@Service
 public class StoreService {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
@@ -66,13 +69,13 @@ public class StoreService {
         Store store = new Store(storeName, code, address, addressDetail, axis.get("latitude"), axis.get("longitude"));
         storeRepository.createStore(store);
         System.out.println("***생성된 사업장 번호:" + store.getId());
+        log.info("**사업장 생성 성공, 생성된 사업장 번호:{} / 사업장 코드:{}", store.getId(), store.getInviteCode());
 
         return store;
     }
 
     /*2.카카오 로컬 API를 활용해 도로명 주소를 좌표(위도, 경도)로 변환*/
     public Map<String, Double> changeAxis(String address) {
-        System.out.println("***주소:" + address);
         String appKey = "64ebcc55e9ce025378904a725743ba67"; // 카카오 REST API Key 값
 
         Map<String, Double> axis = new HashMap<>(); //리턴할 Map 선언
@@ -96,7 +99,6 @@ public class StoreService {
                 entity,
                 String.class
         );
-        System.out.println("***지도API response.getBody: " + response.getBody());
 
         String responseBody = response.getBody(); //카카오 로컬 API의 response
 
@@ -121,7 +123,6 @@ public class StoreService {
         int code = -1;
         while(code < 0) {
             code = (int)(Math.random() * (99999 - 10000 + 1)) + 10000;
-            System.out.println("***발급된 사업장 코드"+code);
             try {
                 storeRepository.findStoreByCode(code);
                 code=-1;
@@ -138,7 +139,7 @@ public class StoreService {
         LocalDate currentTime = LocalDate.now(ZoneId.of("Asia/Seoul"));
         Belong belong = new Belong(member, store, currentTime, MemberPosition.President ,name); //사업장 이름 = 가게 이름
 
-        member.setActiveStore(store); //회원의 사용중인 사업장 디폴트값 세팅
+        member.setActiveStore(store); //회원의 활성화된 사업장 디폴트 세팅
 
         belongRepository.createBelong(belong);
         return currentTime;
@@ -155,7 +156,6 @@ public class StoreService {
             belongRepository.findName(store, name);
             return -1L;
         } catch (NoResultException e) {
-            System.out.println("***결과없는 예외 발생!!!!!!!!!!!!");
             Belong belong = new Belong(member, store, currentTime, MemberPosition.Waiting, name);
 
             member.setActiveStore(store); //회원의 사용중인 사업장 디폴트 세팅
@@ -163,7 +163,6 @@ public class StoreService {
 
             return store.getId();
         }
-
     }
 
     /*6.지도에 들어왔을 때 사업장 위도,경도,출퇴근허용거리 반환*/
@@ -208,7 +207,7 @@ public class StoreService {
             //HashMap에 소속된 사업장 정보 저장
             getBelongStoreInfoResponse.setBelongedStore(belongedStore);
         }
-        System.out.println("***사업장 정보 반환 완료");
+        log.info("**소속된 모든 사업장 정보 반환 성공, 소속된 사업장 개수:{}", belongs.size());
         return getBelongStoreInfoResponse;
     }
 
@@ -224,6 +223,8 @@ public class StoreService {
             employeeListResponseDto.setEmployee(employeeId, employeeName);
         }
         employeeListResponseDto.setMessage("Success");
+
+        log.info("**소속되어 있는 직원 목록 반환 성공, 소속된 직원 수:{}", belongEmployeeList.size());
         return employeeListResponseDto;
     }
 
@@ -232,10 +233,10 @@ public class StoreService {
         Member employee = memberRepository.findOne(employeeId);
         Belong findBelong = belongRepository.findBelongInfo(employee, store);
 
-        System.out.println("***belong:" + findBelong.getMember().getId() + "//" +
-                findBelong.getSalaryHour() + "///" + findBelong.getStore().getName());
-
         findBelong.setSalaryHour(newSalary);
+
+        log.info("**직원 급여 변경 성공, 직원번호:{} / 가게이름:{} / 변경된 급여:{}",
+                findBelong.getMember().getId(),findBelong.getName(),findBelong.getSalaryHour());
 
         return new ResponseEntity("Success", HttpStatus.OK);
     }
@@ -259,6 +260,8 @@ public class StoreService {
 
             waitEmployeeResponse.addWaitEmployee(employeeId, employeeName, belongDate);
         }
+
+        log.info("**가입 대기 직원 목록 조회 성공, 대기 직원 수:{}", waitEmployeeList.size());
         return waitEmployeeResponse;
     }
 
@@ -279,6 +282,7 @@ public class StoreService {
             Member employee = memberRepository.findOne(employeeId);
             Belong belongInfo = belongRepository.allowNewEmployee(employee, store);
             belongInfo.setPosition(newPosition);
+            log.info("가입 대기 직원 처리 결과 - 직원이름:{} / 직급:{}",belongInfo.getName(), belongInfo.getPosition());
         }
         return new ResponseEntity("Success", HttpStatus.OK);
     }

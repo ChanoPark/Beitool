@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,23 +25,23 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 /**
- * 2022-03-21 카카오 소셜 로그인
  * 1.카카오API에게 엑세스 토큰을 주고, 토큰 정보를 획득(만료 기간 등)
  * 2.DB정보를 통해 신규/기존 유저 구분
  * 3.리프레시 토큰을 사용해 엑세스 토큰 갱신(+리프레시 토큰이 얼마 남지 않을 경우 같이 갱신)
  * 4.엑세스 토큰을 통해 회원 정보 획득(회원 번호 등)
  *
- * Implemented by Chanos
+ * @author Chanos
+ * @since 2022-03-21
  */
 
-@Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
+@Service
 public class MemberKakaoApiService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
-    private final WorkInfoRepository workInfoRepository;
     private final BelongRepository belongRepository;
 
     /*컨트롤러에서 엑세스토큰을 받으면(프론트에서 로그인하면) 사용자 확인 & 토큰 만료 확인*/
@@ -55,15 +56,15 @@ public class MemberKakaoApiService {
 
         //카카오에게 GET 요청
         try {
-        ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<String> response = restTemplate.exchange(
                 "https://kapi.kakao.com/v1/user/access_token_info",
                 HttpMethod.GET,
                 entity,
                 String.class
-        );
+            );
 
             //결과
-            System.out.println("***토큰정보의 response: " + response.getBody());
+            log.info("**카카오로부터 받은 토큰 정보:{} ", response.getBody());
 
             //남은 초 비교해서 토큰 갱신 여부 판단하자(GSON활용)
             String tokenInfoFromKakao = response.getBody();
@@ -74,8 +75,8 @@ public class MemberKakaoApiService {
 
             //엑세스 토큰 만료 시간이 얼마 남지 않은 경우
             if (tokenInfo.getExpires_in() <= 6000) { //토큰만료가 100분 이하일경우
-                System.out.println("***토큰 만료 시간이 100분 이하입니다.");
-                throw new HttpClientErrorException(UNAUTHORIZED);// 리프레시 토큰을 활용해 토큰 갱신
+                log.warn("**엑세스 토큰의 만료 시간이 100분 이하입니다.");
+                throw new HttpClientErrorException(UNAUTHORIZED);// 리프레시 토큰을 활용해 토큰 갱신 -> 컨트롤러로 throws
             } else {
                 //기존 유저인지 확인부터 해야지
                 checkNewMember(authorizationKakaoDto, token);
@@ -93,8 +94,6 @@ public class MemberKakaoApiService {
 
         //프론트에게 전해줄 회원ID
         authorizationKakaoDto.setId(kakaoUserId);
-
-        System.out.println("***멤버 조회::" + memberRepository.findOne(kakaoUserId));
 
         //유저 생성
         if(memberRepository.findOne(kakaoUserId) == null) { //신규 유저
@@ -151,8 +150,8 @@ public class MemberKakaoApiService {
             String responseBody = response.getBody();
             UpdateTokenFromKakaoDto newTokenInfo = objectMapper.readValue(responseBody, UpdateTokenFromKakaoDto.class);
             //리프레시 토큰 업데이트
-            System.out.println("***New RefreshToken:" + newTokenInfo.getRefresh_token());
-            System.out.println("***New AccessToken:" +newTokenInfo.getAccess_token());
+            log.info("**새로 발급된 엑세스 토큰:{}", newTokenInfo.getAccess_token());
+            log.info("**새로 발급된 리스페릿 토큰:{}", newTokenInfo.getRefresh_token());
             memberRepository.updateRefreshToken(member, newTokenInfo.getRefresh_token());
             token.setAccessToken(newTokenInfo.getAccess_token());
         } catch (JsonProcessingException e) {
@@ -179,7 +178,7 @@ public class MemberKakaoApiService {
                 String.class
         );
 
-        System.out.println("***Response: " + response.getBody());
+        log.info("엑세스 토큰을 활용해 얻은 회원 정보:{}", response.getBody());
         String responseBody = response.getBody();
         try {
             Map<String, Object> memberInfo = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});

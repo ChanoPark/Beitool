@@ -3,7 +3,7 @@ package com.beitool.beitool.api.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.Getter;
-/*
+/**
 * 토큰 값을 주고 받기 위한 DTO (프론트로부터 받은 토큰값 관리를 위한 DTO)
 *
 * @author Chanos
@@ -11,6 +11,8 @@ import lombok.Getter;
 **/
 @Getter @Data
 public class AuthorizationKakaoDto {
+    @ApiModelProperty(value="엑세스 토큰", example="Xcm13aFB")
+    private String accessToken;
 
     @ApiModelProperty(value="리프레시 토큰", example="zKoqkm1Imv")
     private String refreshToken; //리프레시 토큰 값

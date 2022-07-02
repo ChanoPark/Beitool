@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,8 +42,9 @@ import java.time.LocalTime;
  */
 
 @Api(tags="근로")
-@RestController
+@Slf4j
 @RequiredArgsConstructor
+@RestController
 public class WorkApiController {
     private final MemberKakaoApiService memberKakaoApiService;
     private final MemberRepository memberRepository;
@@ -155,6 +157,8 @@ public class WorkApiController {
             lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서
             return workService.calculateSalaryForPresident(member, firstDateTime, lastDateTime);
         }
+
+        log.warn("**급여 계산기(사장) 조회 실패 - 유효하지 않은 isMonthOrWeek 값");
         return new SalaryCalPresidentResponseDto("Failed");
     }
 
@@ -187,6 +191,7 @@ public class WorkApiController {
             lastDateTime = firstDateTime.plusWeeks(1).plusDays(1); //7일차까지 포함하기 위해서
             return workService.calculateSalaryForEmployee(member, firstDateTime, lastDateTime);
         }
+        log.warn("**급여계산기(직원) 조회 실패 - 유효하지 않은 isMonthOrWeek 값");
         return new SalaryCalEmployeeResponseDto("Failed");
     }
 
@@ -196,7 +201,6 @@ public class WorkApiController {
     @Data
     static class CommuteRequestDto {
         private String workType;
-        private String accessToken;
     }
     /*출퇴근 Response DTO*/
     @Data
@@ -211,7 +215,6 @@ public class WorkApiController {
     /*근무 시프트 Request DTO*/
     @Data
     static public class ScheduleReadRequestDto {
-        private String accessToken;
 
         @JsonSerialize(using= LocalDateSerializer.class)
         @JsonDeserialize(using= LocalDateDeserializer.class)
@@ -220,7 +223,6 @@ public class WorkApiController {
 
     @Data
     static public class ReadScheduleMonthlyDto {
-        String accessToken;
 
         @JsonSerialize(using= LocalDateSerializer.class)
         @JsonDeserialize(using= LocalDateDeserializer.class)

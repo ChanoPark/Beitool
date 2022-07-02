@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +24,10 @@ import java.util.Map;
  * @since 2022-05-17
  */
 
+@Slf4j
 @Api(tags="파일")
-@RestController
 @RequiredArgsConstructor
+@RestController
 public class FileController {
 
     private final AmazonS3Service amazonS3Service;
@@ -35,6 +37,8 @@ public class FileController {
     @PostMapping("/board/stock/upload/file/")
     public UploadStockResponseDto uploadStock(@RequestParam("file")MultipartFile file) {
         Map<String, String> fileInfo = amazonS3Service.uploadToS3(file, "stock");
+
+        log.info("**재고관리 파일 S3 업로드 성공, 파일이름:{}", fileInfo.get("fileName"));
         return new UploadStockResponseDto(fileInfo.get("fileName"),fileInfo.get("filePath"));
     }
 
@@ -43,6 +47,8 @@ public class FileController {
     @DeleteMapping("/board/stock/delete/file/")
     public ResponseEntity deleteStock(@RequestParam("fileName") String fileName) {
         amazonS3Service.deleteFile(fileName);
+
+        log.info("**S3 버킷 파일 삭제, 삭제된 파일 이름:{}", fileName);
         return new ResponseEntity("Delete file success", HttpStatus.OK);
     }
 

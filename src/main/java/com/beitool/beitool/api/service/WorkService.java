@@ -7,6 +7,7 @@ import com.beitool.beitool.api.dto.ScheduleReadResponseDto.WorkInfoResponse;
 import com.beitool.beitool.api.repository.*;
 import com.beitool.beitool.domain.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -36,9 +37,10 @@ import java.util.Map;
  * @author Chanos
  * @since 2022-05-27
  */
-@Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
+@Service
 public class WorkService {
     private final MemberKakaoApiService memberKakaoApiService;
     private final MemberRepository memberRepository;
@@ -49,7 +51,6 @@ public class WorkService {
 
     /*1.출퇴근*/
     public String workCommute(String workType, String accessToken) {
-        System.out.println("***workType:" + workType + " accessToken:" + accessToken);
         String result = "Failed";
 
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
@@ -60,26 +61,28 @@ public class WorkService {
 
         //출근이면 근로정보 생성
         if (workType.equals("onWork")) {
-            System.out.println("***출근");
-
             //퇴근하지 않고 출근 버튼을 누르면 출근 불가능
             if (workInfoRepository.findWorkInfo(member, store) == 0) {
                 //근로정보 생성(출근)
                 WorkInfo workInfo = new WorkInfo(member, member.getActiveStore(), currentTime, today);
                 workInfoRepository.createWorkInfo(workInfo);
                 result = "Success";
-            }//퇴근이면 근로정보 조회 후 퇴근 정보 업데이트
+                log.info("**출근 성공, 회원번호:{} / 출근날짜:{}", member.getId(), today);
+            } else {
+                log.warn("**출근 실패 - 퇴근하지 않고 출근한 경우, 회원번호:{} / 출근날짜:{}", member.getId(), today);
+            }
+        //퇴근이면 근로정보 조회 후 퇴근 정보 업데이트
         } else {
-            System.out.println("***퇴근");
-
             //출근하지 않고 퇴근 버튼을 누르면 퇴근 불가능
             if (workInfoRepository.findWorkInfo(member, store) > 0) {
                 //퇴근 정보 업데이트
                 workInfoRepository.updateOffWork(member, store, currentTime);
                 result = "Success";
+                log.info("**퇴근 성공회원번호:{} / 출근날짜:{}", member.getId(), today);
+            } else {
+                log.warn("**퇴근 실패 - 출근하지 않고 퇴근한 경우, 회원번호:{} / 출근날짜:{}", member.getId(), today);
             }
         }
-        System.out.println("***출퇴근 완료");
         return result;
     }
 
@@ -96,8 +99,10 @@ public class WorkService {
         if (validateSchedule(workDay, workStartTime, workEndTime)) {
             WorkSchedule workSchedule = new WorkSchedule(employee, member, store, workDay, workStartTime, workEndTime);
             workScheduleRepository.createSchedule(workSchedule);
+            log.info("캘린더 일정 작성 성공, 가게 번호:{} / 직원번호:{} / 날짜:{}",store.getId(), employeeId, workDay);
             return new ResponseEntity("Success", HttpStatus.CREATED);
         } else {
+            log.warn("캘린더 일정 작성 실패, 가게 번호:{} / 직원번호:{} / 날짜:{}",store.getId(), employeeId, workDay);
             return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
         }
     }
@@ -153,8 +158,10 @@ public class WorkService {
         ScheduleReadResponseDto scheduleReadResponseDto = new ScheduleReadResponseDto();
         LocalDateTime today = LocalDateTime.now();
 
-        /*******전체 회원을 조회해야 하는데, 사장것만 조회하다 보니까 res가 안오는거같네요~~~******/
-        //근무기록 조회할 때 회원 조건 빼고 사업장만 걸어서 한번에 조회하면 될듯? ? ? ?
+        /****************************************************************************
+         * 전체 회원을 조회해야 하는데, 사장것만 조회하다 보니까 res가 안오는 듯.              *
+         * 근무기록 조회할 때 회원 조건 빼고 사업장만 걸어서 한번에 조회하면 될 듯.             *
+        *****************************************************************************/
 
         //1일 ~ 오늘 : 근무 기록
         List<WorkInfo> workInfos = workInfoRepository.findAllWorkHistoryPeriod(store, firstDateTime, today);
@@ -174,7 +181,7 @@ public class WorkService {
             WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, author, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
             scheduleReadResponseDto.setWorkInfos(workInfoResponse);
         }
-
+        log.info("**캘린더 한달 일정 조회 - 일정 개수:{}", (workInfos.size()+workSchedules.size()) );
         return scheduleReadResponseDto;
     }
     /*5.캘린더 일정 하루 조회*/
@@ -192,6 +199,7 @@ public class WorkService {
                 WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, name, workInfo.getWorkStartTime(), workInfo.getWorkEndTime(), workInfo.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
             }
+            log.info("**캘린더 하루 일정 조회(근무기록) - 근무 기록 개수:{}", workInfos.size());
         } else { //오늘 포함 이후의 날짜를 선택하면 배정되어 있는 근무를 반환함.
             List<WorkSchedule> workSchedules = workScheduleRepository.readScheduleFuture(store, day);
             for (WorkSchedule workSchedule : workSchedules) {
@@ -201,6 +209,7 @@ public class WorkService {
                 WorkInfoResponse workInfoResponse = new WorkInfoResponse(postId, employeeName, authorName, workSchedule.getWorkStartTime(), workSchedule.getWorkEndTime(), workSchedule.getWorkDay());
                 scheduleReadResponseDto.setWorkInfos(workInfoResponse);
             }
+            log.info("**캘린더 하루 일정 조회(근무예정기록) - 근무 예정 기록 개수:{}", workSchedules.size());
         }
         return scheduleReadResponseDto;
     }
@@ -214,8 +223,10 @@ public class WorkService {
         //작성자 혹은 사장만 삭제 가능
         if (belongInfo.getPosition().equals(MemberPosition.President) || member.equals(employee)) {
             workScheduleRepository.deleteSchedule(postId);
+            log.info("**캘린더 일정 삭제 성공, 게시글 번호:{}", postId);
             return new ResponseEntity("Delete Success", HttpStatus.ACCEPTED);
         }
+        log.warn("**캘린더 일정 삭제 실패 - 본인 혹은 사장만 삭제 가능, 게시글 번호:{}", postId);
         return new ResponseEntity("Delete Failed", HttpStatus.BAD_REQUEST);
     }
 
@@ -234,8 +245,10 @@ public class WorkService {
 
         if (validateSchedule(workDay, workStartTime, workEndTime)) {
             schedule.updateWorkSchedule(employee, author, workDay, workStartTime, workEndTime);
+            log.info("**캘린더 일정 수정 성공, 수정된 게시글 번호:{}", postId);
             return new ResponseEntity("Success", HttpStatus.CREATED);
         } else {
+            log.info("**캘린더 일정 수정 실패, 게시글 번호:{}", postId);
             return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
         }
     }
@@ -308,6 +321,7 @@ public class WorkService {
 
         responseDto.setTotalInfo(totalSalary, totalWorkingHour, totalWorkingMin,
                                     totalHolidayPay, employeeList.size(), totalInsurance);
+        log.info("**급여 계산기(사장) 결과 - 총 급여:{}", totalSalary);
         return responseDto;
     }
 
@@ -356,7 +370,7 @@ public class WorkService {
         }
 
         responseDto.setInfo(totalSalary, workingHour, workingMin, salaryHour, holidayPay, insurance);
-
+        log.info("**급여 계산기(직원) 결과 - 총 급여:{}", totalSalary);
         return responseDto;
     }
 
@@ -395,7 +409,6 @@ public class WorkService {
         if ((workingTimeInWeek / 60) >= 15) {
             holidayPay += ((workingTimeInWeek / 60.0) / workingTimes.size()) * employee.getSalaryHour();
         }
-
         return holidayPay;
     }
 

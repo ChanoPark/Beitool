@@ -10,6 +10,7 @@ import com.beitool.beitool.domain.*;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * 게시판을 사용하기 위한 컨트롤러
@@ -52,8 +52,9 @@ import java.util.Map;
  */
 
 @Api(tags = "게시판")
-@RestController
+@Slf4j
 @RequiredArgsConstructor
+@RestController
 public class BoardController {
     private final BoardServiceImpl boardServiceImpl;
     private final MemberRepository memberRepository;
@@ -107,10 +108,13 @@ public class BoardController {
 
         Belong belongInfo = belongRepository.findBelongInfo(member, member.getActiveStore());//활성화된 사업장소속정보
         
-        if (belongInfo.getPosition().equals(MemberPosition.President)) //사장만 공지사항 작성 가능
+        if (belongInfo.getPosition().equals(MemberPosition.President)) { //사장만 공지사항 작성 가능
             return boardServiceImpl.createAnnouncementPost(member, belongInfo, boardRequestDto);
-        else
+        }
+        else {
+            log.warn("**공지사항 작성 실패 - 사장만 공지사항 작성 가능");
             return new PostDetailResponseDto("Failed");
+        }
     }
 
     /*2-2.자유게시판 작성*/
@@ -135,10 +139,13 @@ public class BoardController {
         Member author = memberRepository.findOne(memberId);
         Belong belongInfo = belongRepository.findBelongInfo(author, author.getActiveStore());
         //사장만 업무를 지시할 수 있다.
-        if (belongInfo.getPosition().equals(MemberPosition.President))
+        if (belongInfo.getPosition().equals(MemberPosition.President)) {
             return boardServiceImpl.createToDoPost(author, belongInfo, toDoListRequestDto);
-        else
+        }
+        else {
+            log.warn("**ToDoList 작성 실패 - 사장만 업무 지시 가능");
             return new ToDoListResponseDto("Failed");
+        }
     }
 
     /*2-4.재고관리 작성*/
@@ -183,7 +190,7 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
-        String result = boardServiceImpl.deletePost(member, boardRequestDto.getId(), boardRequestDto.getBoardType());
+        boolean result = boardServiceImpl.deletePost(member, boardRequestDto.getId(), boardRequestDto.getBoardType());
         return new BoardResponseDto(result);
     }
 
@@ -197,13 +204,14 @@ public class BoardController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Long id = stockDeleteRequestDto.getId();
-        String deleteResult = boardServiceImpl.deletePost(member, id, "Stock");
+        boolean deleteResult = boardServiceImpl.deletePost(member, id, "Stock");
 
         //사진 삭제 과정
-        if (deleteResult.equals("Success")) {
+        if (deleteResult) {
             amazonS3Service.deleteFile(stockDeleteRequestDto.getProductFileName());
             return new StockReadResponseDto("Success");
         } else {
+            log.info("**재고관리 게시글 삭제 실패 - 파일이 삭제되지 않음, 파일이름:{}", stockDeleteRequestDto.getProductFileName());
             return new StockReadResponseDto("Failed");
         }
     }
@@ -263,6 +271,8 @@ public class BoardController {
         String newFileName = stockFileRequestDto.getNewFileName();
         String newFilePath = stockFileRequestDto.getNewFilePath();
         boardServiceImpl.updateStockFilePost(postId, newFileName, newFilePath);
+
+        log.info("**재고관리 파일 수정 성공, 기존파일이름:{} / 새로운파일이름:{}", stockFileRequestDto.getOldFileName(), newFileName);
         return new ResponseEntity("Success", HttpStatus.OK);
     }
 

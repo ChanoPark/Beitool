@@ -3,6 +3,7 @@ package com.beitool.beitool.api.service;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,8 +21,9 @@ import java.util.Map;
  * @author Chanos
  * @since 2022-05-16
  */
-@Service
+@Slf4j
 @RequiredArgsConstructor
+@Service
 public class AmazonS3Service {
     private final AmazonS3Client amazonS3Client;
 
@@ -45,8 +47,7 @@ public class AmazonS3Service {
             amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
                     .withCannedAcl(CannedAccessControlList.PublicRead));
         } catch(IOException e) {
-            System.out.println("***파일 업로드 실패");
-            e.printStackTrace();
+            log.warn("**파일 업로드 실패 - IOException");
         }
 
         Map<String, String> fileInfo = new HashMap<>();

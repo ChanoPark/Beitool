@@ -20,6 +20,6 @@ public class StoreAddressResponseDto {
     @ApiModelProperty(value="출퇴근 허용 거리(단위:m)", example="300")
     private int allowDistance;
 
-    @ApiModelProperty(value="결과 메시지", example="Success & Fail")
+    @ApiModelProperty(value="결과 메시지", example="Working & noWorking")
     private String message;
 }

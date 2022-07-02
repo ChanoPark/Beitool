@@ -15,12 +15,12 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.NoResultException;
@@ -48,8 +48,9 @@ import java.util.List;
  */
 
 @Api(tags="사업장")
-@RestController
+@Slf4j
 @RequiredArgsConstructor
+@RestController
 public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
@@ -61,19 +62,13 @@ public class StoreApiController {
     @Operation(summary = "사업장 생성", description = "사업장 생성 + 회원 '사장' 직급 결정->사장만 접근해야 함.")
     @PostMapping("/store/create/")
     public CreateAndJoinStoreResponse createStore(@RequestBody CreateStoreRequest createStoreRequest) {
-        System.out.println("***사업장 생성 createStoreRequest : " + createStoreRequest);
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        System.out.println("****accssToken:"+accessToken);
-
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
-        createStoreResponse.setMessage("Failed");
-        createStoreResponse.setScreen("PlaceRegister");
 
         //회원 직급 등록(사장)
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
-//            memberService.setPosition(memberId, createStoreRequest.getStatus());
 
         //사업장 생성
         Store store = storeService.createStore(createStoreRequest.placeName,
@@ -85,6 +80,7 @@ public class StoreApiController {
         //ResponseDTO에 정보 삽입(try-catch문으로 인해 생성자에서 바로 삽입을 못함->설계를 잘하면 한번에 할 수 있지 않을까?)
         createStoreResponse.setBelongInfo(memberId, store.getId(), joinDate, "Success", "MainScreen");
 
+        log.info("**사업장 생성 성공, 사업장번호:{}",store.getId());
         return createStoreResponse;
     }
 
@@ -92,14 +88,12 @@ public class StoreApiController {
     @Operation(summary = "사업장 가입", description = "사업장 가입 + 회원 '직원' 직급 결정->직원만 접근해야 함.")
     @PostMapping("/store/join/")
     public CreateAndJoinStoreResponse joinStore(@RequestBody JoinStoreRequest joinStoreRequest) {
-        System.out.println("***사업장 가입 request:" + joinStoreRequest);
-
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
+        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
 
         try {
-            Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
             Member findMember = memberRepository.findOne(memberId);
 
             //사업장 가입
@@ -110,6 +104,7 @@ public class StoreApiController {
             if (storeId < 0) {
                 createStoreResponse.setMessage("Duplicated name");
                 createStoreResponse.setScreen("PlaceJoin");
+                log.warn("**사업장 가입 실패 - 중복된 이름 사용");
                 return createStoreResponse;
             }
 
@@ -117,7 +112,10 @@ public class StoreApiController {
         } catch (NoResultException e) { //올바르지 않은 사업장 코드
             createStoreResponse.setMessage("Failed");
             createStoreResponse.setScreen("PlaceJoin"); // 다시 가입페이지로 이동
+            log.warn("**사업장 가입 실패 - 유효하지 않은 사업장 코드");
+            return createStoreResponse;
         }
+        log.info("**사업장 가입 성공, 회원번호:{} / 사업장번호:{}", memberId, createStoreResponse.getStoreId());
         return createStoreResponse;
     }
     
@@ -127,6 +125,7 @@ public class StoreApiController {
     public StoreAddressResponseDto getStoreAddressAndAllowDistance() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
         StoreAddressResponseDto storeAddressAndAllowDistance = storeService.getStoreAddressAndAllowDistance(accessToken);
+        log.info("**사업장 위치 반환 성공, 위도:{} / 경도:{}", storeAddressAndAllowDistance.getLatitude(), storeAddressAndAllowDistance.getLongitude());
         return storeAddressAndAllowDistance;
     }
 
@@ -141,6 +140,7 @@ public class StoreApiController {
 
         MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
 
+        log.info("**메인 화면 조회 성공, 사업장 이름:{} / 직급:{}", member.getActiveStore().getName(), position);
         return new GetActiveStoreInfo(member.getActiveStore().getName(), position);
     }
 
@@ -176,6 +176,7 @@ public class StoreApiController {
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Store store = memberRepository.findOne(memberId).getActiveStore();
 
+        log.info("사업장 환경 설정 정보 - 사업장코드:{} / 출근허용거리:{}", store.getInviteCode(), store.getAllowDistance());
         return new GetConfigInfoResponse(store.getInviteCode(), store.getAllowDistance());
     }
 
@@ -205,8 +206,7 @@ public class StoreApiController {
 
         storeService.setStoreAllowDistance(store, storeDistanceRequest.getAllowDistance());
 
-        System.out.println("**store:" + store.getName() + "//" + store.getAllowDistance());
-
+        log.info("**출근 허용 거리 설정 완료, 사업장 이름:{} / 허용 거리:{}", store.getName(), store.getAllowDistance());
         return new ResponseEntity("Success", HttpStatus.OK);
     }
 
@@ -230,14 +230,15 @@ public class StoreApiController {
 
         Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
-        Store store = member.getActiveStore();
-        List<Long> employeeIdList = newEmployeeRequest.getEmployeeIdList();
-
         MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
 
         if (position != MemberPosition.President) {
+            log.warn("**가입 대기 직원 승인&삭제 실패 - 사장만 승인&삭제 가능.");
             return new ResponseEntity("Failed", HttpStatus.BAD_REQUEST);
         }
+
+        Store store = member.getActiveStore();
+        List<Long> employeeIdList = newEmployeeRequest.getEmployeeIdList();
 
         return storeService.allowNewEmployee(store, employeeIdList, newEmployeeRequest.getRequest());
     }
@@ -246,7 +247,6 @@ public class StoreApiController {
     /*사업장 생성을 위한 Request DTO, ResponseDTO*/
     @Data
     static class CreateStoreRequest {
-        private String accessToken;
         private String status;
         private String placeName;
         private String address;
@@ -254,7 +254,7 @@ public class StoreApiController {
     }
     /*사업장 생성, 가입 Response DTO*/
     @Data
-    @AllArgsConstructor @NoArgsConstructor
+    @AllArgsConstructor
     static class CreateAndJoinStoreResponse {
         private Long memberId;
         private Long storeId;
@@ -264,6 +264,12 @@ public class StoreApiController {
         @JsonDeserialize(using= LocalDateDeserializer.class)
         @JsonSerialize(using= LocalDateSerializer.class)
         private LocalDate belongDate;
+
+        //NoArgsConstructor
+        public CreateAndJoinStoreResponse() {
+            this.message = "Failed";
+            this.screen = "PlaceRegister";
+        }
 
         //try-catch문으로 인해 생성자에서 받을 수 없으므로 정보를 삽입하는 메소드 사용
         public void setBelongInfo(Long memberId, Long storeId, LocalDate belongDate, String message, String screen) {
@@ -278,7 +284,6 @@ public class StoreApiController {
     /*직원의 사업장 가입을 위한 Request DTO*/
     @Data
     static class JoinStoreRequest {
-        private String accessToken;
         private String userName;
         private int inviteCode;
     }
@@ -300,7 +305,6 @@ public class StoreApiController {
     /*직원 급여 변경을 위한 Request DTO*/
     @Data
     static class SetEmployeeSalaryRequest {
-        private String accessToken;
         private Long employeeId;
         private Integer newSalary;
     }
@@ -308,14 +312,12 @@ public class StoreApiController {
     /*사업장 출근 허용 가능 거리 설정을 위한 Request DTO*/
     @Data
     static class SetStoreAllowDistanceRequest {
-        private String accessToken;
         private Integer allowDistance;
     }
 
     /*새로운 직원 승인하기 위한 Request DTO*/
     @Data
     static class NewEmployeeRequest {
-        private String accessToken;
         private List<Long> employeeIdList;
         private String request; //승인 or 삭제
     }

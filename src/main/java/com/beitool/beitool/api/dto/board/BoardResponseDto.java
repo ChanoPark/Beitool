@@ -17,8 +17,11 @@ public class BoardResponseDto {
     public BoardResponseDto() {
         posts = new ArrayList<BoardDomain>();
     }
-    public BoardResponseDto(String message) {
-        this.message=message;
+    public BoardResponseDto(boolean result) {
+        if (result)
+            this.message="Success";
+        else
+            this.message="Failed";
     }
 
     @ApiModelProperty(value="결과 메시지", example="Success & Fail")
