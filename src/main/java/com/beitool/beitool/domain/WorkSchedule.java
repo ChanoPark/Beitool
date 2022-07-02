@@ -52,6 +52,7 @@ public class WorkSchedule {
     private Member employee;
 
     @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="author")
     private Member author; //작성자
 
     @ManyToOne(fetch=FetchType.LAZY)

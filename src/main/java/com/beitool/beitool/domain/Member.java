@@ -5,8 +5,9 @@ import lombok.Getter;
 import javax.persistence.*;
 
 /**
- * 2022-03-27 회원 엔티티
- * Implemented by Chanos
+ * 회원 엔티티
+ * @author Chanos
+ * @since 2022-03-27
  */
 @Entity
 @Getter @Table(name="member")
@@ -19,7 +20,7 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
-    @OneToOne(fetch=FetchType.LAZY)
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="active_store_id")
     private Store activeStore;
 
