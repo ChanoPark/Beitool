@@ -1,8 +1,6 @@
 package com.beitool.beitool.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
@@ -17,8 +15,10 @@ import java.time.LocalDateTime;
 @Entity
 @Getter @Table(name="store")
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Store {
 
+    @Builder(builderMethodName = "of")
     public Store(String storeName, int code, String address, String addressDetail, double latitude, double longitude) {
         this.name=storeName;
         this.inviteCode=code;
@@ -28,7 +28,6 @@ public class Store {
         this.longitude=longitude;
         this.allowDistance=500; //출퇴근 허용거리 디폴트 500M
     }
-
 
     @Id @GeneratedValue
     @Column(name="store_id")

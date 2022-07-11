@@ -198,16 +198,36 @@ public class BoardServiceImpl {
         String productFileName = stockRequestDto.getProductFileName(); //파일명
         String productFilePath = stockRequestDto.getProductFilePath(); //파일경로(URL)
 
-        //객체 생성
-        Stock stock = new Stock(authorName, createdDate, member, member.getActiveStore(), description,
-                productName, quantity, expirationTime, createdDate,productFileName, productFilePath);
+        Stock stock = Stock.of()
+                .authorName(authorName)
+                .createdDate(createdDate)
+                .member(member)
+                .store(member.getActiveStore())
+                .description(description)
+                .productName(productName)
+                .quantity(quantity)
+                .expirationTime(expirationTime)
+                .modifiedTime(createdDate) //수정 전에는 생성 시간이 적용됨.
+                .productFileName(productFileName)
+                .productFilePath(productFilePath)
+                .build();
 
         //DB저장
         Long postId = boardRepository.createPost(stock);
 
         log.info("**재고관리 작성 성공, 사업장 번호:{} / 게시글번호:{}", member.getActiveStore().getId(), postId);
-        return new StockResponseDto("Success", postId, authorName, productName,quantity, description,
-                expirationTime, createdDate, productFilePath, productFileName);
+        return StockResponseDto.of()
+                .message("Success")
+                .id(postId)
+                .authorName(authorName)
+                .productName(productName)
+                .quantity(quantity)
+                .description(description)
+                .expirationTime(expirationTime)
+                .createdDate(createdDate)
+                .productFilePath(productFilePath)
+                .productFileName(productFileName)
+                .build();
     }
 
 

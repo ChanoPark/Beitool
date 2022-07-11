@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,7 +24,7 @@ import java.time.LocalDateTime;
 @Table(name="stock_board")
 @NoArgsConstructor
 public class Stock extends BoardDomain {
-
+    @Builder(builderMethodName = "of")
     public Stock(String authorName, LocalDateTime createdDate, Member member, Store store, String description,
                  String productName, Integer quantity, LocalDateTime expirationTime, LocalDateTime modifiedTime,
                  String productFileName, String productFilePath) {

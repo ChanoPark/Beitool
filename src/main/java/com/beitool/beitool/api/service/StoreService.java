@@ -55,7 +55,7 @@ import java.util.Map;
 public class StoreService {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
-    private final MemberKakaoApiService memberKakaoApiService;
+    private final MemberOAuthService memberOAuthService;
     private final StoreRepository storeRepository;
     private final WorkInfoRepository workInfoRepository;
     private final BelongRepository belongRepository;
@@ -66,9 +66,15 @@ public class StoreService {
         Map<String, Double> axis = changeAxis(address);
         int code = createStoreCode();
 
-        Store store = new Store(storeName, code, address, addressDetail, axis.get("latitude"), axis.get("longitude"));
+        Store store = Store.of()
+                .storeName(storeName)
+                .code(code)
+                .addressDetail(addressDetail)
+                .latitude(axis.get("latitude"))
+                .longitude(axis.get("longitude"))
+                .build();
+
         storeRepository.createStore(store);
-        System.out.println("***생성된 사업장 번호:" + store.getId());
         log.info("**사업장 생성 성공, 생성된 사업장 번호:{} / 사업장 코드:{}", store.getId(), store.getInviteCode());
 
         return store;
@@ -169,7 +175,7 @@ public class StoreService {
     public StoreAddressResponseDto getStoreAddressAndAllowDistance(String accessToken) {
         String isWorking;
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member findMember = memberRepository.findOne(memberId);
 
         Store findActiveStore = memberRepository.findOne(memberId).getActiveStore();
