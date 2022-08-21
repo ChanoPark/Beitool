@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter @Table(name="store")
 @NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Store {
 
     @Builder(builderMethodName = "of")

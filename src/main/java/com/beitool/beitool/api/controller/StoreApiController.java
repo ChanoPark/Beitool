@@ -3,7 +3,7 @@ package com.beitool.beitool.api.controller;
 import com.beitool.beitool.api.dto.store.*;
 import com.beitool.beitool.api.repository.BelongRepository;
 import com.beitool.beitool.api.repository.MemberRepository;
-import com.beitool.beitool.api.service.MemberKakaoApiService;
+import com.beitool.beitool.api.service.MemberOAuthService;
 import com.beitool.beitool.api.service.StoreService;
 import com.beitool.beitool.domain.Member;
 import com.beitool.beitool.domain.MemberPosition;
@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,7 +55,7 @@ import java.util.List;
 public class StoreApiController {
     private final StoreService storeService;
     private final MemberRepository memberRepository;
-    private final MemberKakaoApiService memberKakaoApiService;
+    private final MemberOAuthService memberOAuthService;
     private final BelongRepository belongRepository;
     private final HttpServletRequest request;
 
@@ -67,7 +68,7 @@ public class StoreApiController {
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
 
         //회원 직급 등록(사장)
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
         //사업장 생성
@@ -91,7 +92,7 @@ public class StoreApiController {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         CreateAndJoinStoreResponse createStoreResponse = new CreateAndJoinStoreResponse();
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
 
         try {
             Member findMember = memberRepository.findOne(memberId);
@@ -135,7 +136,7 @@ public class StoreApiController {
     public GetActiveStoreInfo getActiveStoreInfo() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
         MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
@@ -150,7 +151,7 @@ public class StoreApiController {
     public GetBelongStoreInfoResponse getBelongStoreInfo() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
 
         return storeService.getBelongStoreInfo(member);
@@ -162,7 +163,7 @@ public class StoreApiController {
     public BelongEmployeeListResponseDto getBelongEmployeeList() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         return storeService.getBelongEmployeeList(member.getActiveStore().getId());
     }
@@ -173,7 +174,7 @@ public class StoreApiController {
     public GetConfigInfoResponse getConfigInfo() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Store store = memberRepository.findOne(memberId).getActiveStore();
 
         log.info("사업장 환경 설정 정보 - 사업장코드:{} / 출근허용거리:{}", store.getInviteCode(), store.getAllowDistance());
@@ -186,7 +187,7 @@ public class StoreApiController {
     public ResponseEntity setEmployeeSalary(@RequestBody SetEmployeeSalaryRequest employeeSalaryRequest) {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Store store = memberRepository.findOne(memberId).getActiveStore();
         Long employeeId = employeeSalaryRequest.getEmployeeId();
         Integer newSalary = employeeSalaryRequest.getNewSalary();
@@ -200,7 +201,7 @@ public class StoreApiController {
     public ResponseEntity setStoreAllowDistance(@RequestBody SetStoreAllowDistanceRequest storeDistanceRequest) {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         Store store = member.getActiveStore();
 
@@ -216,7 +217,7 @@ public class StoreApiController {
     public GetWaitEmployeeResponse getWaitEmployee() {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Store store = memberRepository.findOne(memberId).getActiveStore();
 
         return storeService.getWaitEmployee(store);
@@ -228,7 +229,7 @@ public class StoreApiController {
     public ResponseEntity allowNewEmployee(@RequestBody NewEmployeeRequest newEmployeeRequest) {
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        Long memberId = memberKakaoApiService.getMemberInfoFromAccessToken(accessToken);
+        Long memberId = memberOAuthService.getMemberInfoFromAccessToken(accessToken);
         Member member = memberRepository.findOne(memberId);
         MemberPosition position = belongRepository.findBelongInfo(member, member.getActiveStore()).getPosition();
 
